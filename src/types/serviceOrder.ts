@@ -1,5 +1,5 @@
 export type ServiceType = 'hydraulic' | 'electrical' | 'both';
-export type OrderStatus = 'open' | 'executing' | 'closed';
+export type OrderStatus = 'open' | 'executing' | 'executed' | 'closed';
 
 export interface PhotoSet {
   before: string[];
@@ -11,6 +11,7 @@ export interface ServiceOrder {
   id: number;
   clientName: string;
   clientPhone: string;
+  clientEmail: string;
   serviceType: ServiceType;
   address: string;
   latitude?: number;
@@ -24,17 +25,19 @@ export interface ServiceOrder {
   status: OrderStatus;
   assignedTechnician: string;
   createdAt: string;
+  executedAt?: string;
   closedAt?: string;
 }
 
 export const SERVICE_TYPE_LABELS: Record<ServiceType, string> = {
   hydraulic: 'Hidráulica',
   electrical: 'Elétrica',
-  both: 'Hidráulica e Elétrica',
+  both: 'Ambos',
 };
 
 export const STATUS_LABELS: Record<OrderStatus, string> = {
   open: 'Em Aberto',
-  executing: 'Executando',
+  executing: 'Em Execução',
+  executed: 'Executado',
   closed: 'Encerrado',
 };
