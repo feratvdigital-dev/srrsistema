@@ -5,6 +5,7 @@ interface OrderContextType {
   orders: ServiceOrder[];
   addOrder: (order: Omit<ServiceOrder, 'id' | 'createdAt' | 'status'>) => ServiceOrder;
   updateOrder: (id: number, updates: Partial<ServiceOrder>) => void;
+  deleteOrder: (id: number) => void;
   getOrder: (id: number) => ServiceOrder | undefined;
   getNextId: () => number;
 }
@@ -57,12 +58,20 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
     });
   }, []);
 
+  const deleteOrder = useCallback((id: number) => {
+    setOrders(prev => {
+      const updated = prev.filter(o => o.id !== id);
+      saveOrders(updated);
+      return updated;
+    });
+  }, []);
+
   const getOrder = useCallback((id: number) => {
     return orders.find(o => o.id === id);
   }, [orders]);
 
   return (
-    <OrderContext.Provider value={{ orders, addOrder, updateOrder, getOrder, getNextId }}>
+    <OrderContext.Provider value={{ orders, addOrder, updateOrder, deleteOrder, getOrder, getNextId }}>
       {children}
     </OrderContext.Provider>
   );

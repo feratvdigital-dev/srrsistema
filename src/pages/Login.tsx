@@ -26,7 +26,7 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-primary/10 via-background to-secondary/10 p-4">
+    <div className="min-h-screen flex flex-col items-center justify-center p-4" style={{ background: 'linear-gradient(135deg, hsl(215 40% 16%), hsl(215 40% 22%))' }}>
       <Card className="w-full max-w-sm sm:max-w-md shadow-2xl border-0 overflow-hidden">
         <div className="bg-gradient-to-r from-primary to-primary/80 p-6 sm:p-8 flex flex-col items-center">
           <img src={logo} alt="SR Resolve" className="h-16 sm:h-20 w-auto mb-3 sm:mb-4" />
@@ -54,7 +54,7 @@ const Login = () => {
           </form>
         </CardContent>
       </Card>
-      <p className="mt-6 text-xs text-muted-foreground">© 2026 IT Digital. Todos os direitos reservados.</p>
+      <p className="mt-6 text-xs text-white/60">© 2026 IT Digital. Todos os direitos reservados.</p>
     </div>
   );
 };
