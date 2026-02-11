@@ -1,24 +1,43 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { ServiceOrder, SERVICE_TYPE_LABELS } from '@/types/serviceOrder';
+import logoSrc from '@/assets/logo.png';
+
+// Dark navy header color matching dashboard: hsl(215, 40%, 16%) ≈ rgb(25, 31, 57)
+const HEADER_R = 25;
+const HEADER_G = 31;
+const HEADER_B = 57;
+
+// Primary blue for table headers
+const PRIMARY_R = 33;
+const PRIMARY_G = 100;
+const PRIMARY_B = 180;
 
 export const generatePDF = (order: ServiceOrder) => {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
 
-  // Header
-  doc.setFillColor(33, 150, 243);
-  doc.rect(0, 0, pageWidth, 35, 'F');
+  // Header - dark navy like dashboard
+  doc.setFillColor(HEADER_R, HEADER_G, HEADER_B);
+  doc.rect(0, 0, pageWidth, 40, 'F');
+
+  // Add logo to header
+  try {
+    doc.addImage(logoSrc, 'PNG', 14, 5, 30, 30);
+  } catch {
+    // logo unavailable
+  }
+
   doc.setTextColor(255, 255, 255);
-  doc.setFontSize(22);
+  doc.setFontSize(20);
   doc.setFont('helvetica', 'bold');
-  doc.text('RELATÓRIO DE SERVIÇO', pageWidth / 2, 18, { align: 'center' });
-  doc.setFontSize(14);
-  doc.text(`Ordem de Serviço #${order.id}`, pageWidth / 2, 28, { align: 'center' });
+  doc.text('RELATÓRIO DE SERVIÇO', pageWidth / 2 + 10, 18, { align: 'center' });
+  doc.setFontSize(13);
+  doc.text(`Ordem de Serviço #${order.id}`, pageWidth / 2 + 10, 30, { align: 'center' });
 
   // Reset color
   doc.setTextColor(0, 0, 0);
-  let y = 45;
+  let y = 50;
 
   // Client Info
   autoTable(doc, {
@@ -26,7 +45,7 @@ export const generatePDF = (order: ServiceOrder) => {
     head: [['CLIENTE', 'TELEFONE']],
     body: [[order.clientName, order.clientPhone || '-']],
     theme: 'grid',
-    headStyles: { fillColor: [33, 150, 243], textColor: 255, fontStyle: 'bold' },
+    headStyles: { fillColor: [HEADER_R, HEADER_G, HEADER_B], textColor: 255, fontStyle: 'bold' },
     styles: { fontSize: 10 },
   });
 
@@ -37,7 +56,7 @@ export const generatePDF = (order: ServiceOrder) => {
     head: [['TIPO DE SERVIÇO', 'ENDEREÇO']],
     body: [[SERVICE_TYPE_LABELS[order.serviceType], order.address]],
     theme: 'grid',
-    headStyles: { fillColor: [33, 150, 243], textColor: 255, fontStyle: 'bold' },
+    headStyles: { fillColor: [HEADER_R, HEADER_G, HEADER_B], textColor: 255, fontStyle: 'bold' },
     styles: { fontSize: 10 },
   });
 
@@ -51,7 +70,7 @@ export const generatePDF = (order: ServiceOrder) => {
       order.closedAt ? new Date(order.closedAt).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-'
     ]],
     theme: 'grid',
-    headStyles: { fillColor: [33, 150, 243], textColor: 255, fontStyle: 'bold' },
+    headStyles: { fillColor: [HEADER_R, HEADER_G, HEADER_B], textColor: 255, fontStyle: 'bold' },
     styles: { fontSize: 10 },
   });
 
@@ -60,7 +79,7 @@ export const generatePDF = (order: ServiceOrder) => {
   // Description
   doc.setFontSize(12);
   doc.setFont('helvetica', 'bold');
-  doc.setTextColor(33, 150, 243);
+  doc.setTextColor(HEADER_R, HEADER_G, HEADER_B);
   doc.text('DESCRIÇÃO DO PROBLEMA', 14, y);
   doc.setTextColor(0, 0, 0);
   doc.setFont('helvetica', 'normal');
@@ -73,7 +92,7 @@ export const generatePDF = (order: ServiceOrder) => {
   // Service performed
   doc.setFontSize(12);
   doc.setFont('helvetica', 'bold');
-  doc.setTextColor(33, 150, 243);
+  doc.setTextColor(HEADER_R, HEADER_G, HEADER_B);
   doc.text('SERVIÇO REALIZADO', 14, y);
   doc.setTextColor(0, 0, 0);
   doc.setFont('helvetica', 'normal');
@@ -91,7 +110,7 @@ export const generatePDF = (order: ServiceOrder) => {
 
   doc.setFontSize(12);
   doc.setFont('helvetica', 'bold');
-  doc.setTextColor(33, 150, 243);
+  doc.setTextColor(HEADER_R, HEADER_G, HEADER_B);
   doc.text('REGISTRO FOTOGRÁFICO', 14, y);
   doc.setTextColor(0, 0, 0);
   y += 8;
@@ -111,13 +130,17 @@ export const generatePDF = (order: ServiceOrder) => {
 
     const photos = order.photos[phase.key];
     if (photos.length > 0) {
-      try {
-        doc.addImage(photos[0], 'JPEG', x + 2, y + 3, colWidth - 4, 40);
-      } catch {
-        doc.setFont('helvetica', 'normal');
-        doc.setFontSize(8);
-        doc.text('Foto indisponível', x + colWidth / 2, y + 20, { align: 'center' });
-      }
+      // Show up to 2 photos per phase
+      photos.slice(0, 2).forEach((photo, pIdx) => {
+        try {
+          const photoY = y + 3 + pIdx * 35;
+          doc.addImage(photo, 'JPEG', x + 2, photoY, colWidth - 4, 32);
+        } catch {
+          doc.setFont('helvetica', 'normal');
+          doc.setFontSize(8);
+          doc.text('Foto indisponível', x + colWidth / 2, y + 20 + pIdx * 35, { align: 'center' });
+        }
+      });
     } else {
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(8);
@@ -125,7 +148,7 @@ export const generatePDF = (order: ServiceOrder) => {
     }
   });
 
-  y += 55;
+  y += 75;
 
   if (y > 240) {
     doc.addPage();
@@ -135,7 +158,7 @@ export const generatePDF = (order: ServiceOrder) => {
   // Costs
   doc.setFontSize(12);
   doc.setFont('helvetica', 'bold');
-  doc.setTextColor(33, 150, 243);
+  doc.setTextColor(HEADER_R, HEADER_G, HEADER_B);
   doc.text('CUSTOS', 14, y);
   y += 5;
 
@@ -154,7 +177,7 @@ export const generatePDF = (order: ServiceOrder) => {
     },
     didParseCell: (data) => {
       if (data.row.index === 2) {
-        data.cell.styles.fillColor = [33, 150, 243];
+        data.cell.styles.fillColor = [HEADER_R, HEADER_G, HEADER_B];
         data.cell.styles.textColor = 255;
         data.cell.styles.fontStyle = 'bold';
       }
@@ -169,6 +192,22 @@ export const generatePDF = (order: ServiceOrder) => {
     doc.text(`Materiais: ${order.materialDescription}`, 14, y);
   }
 
+  // Warranty
+  y = (doc as any).lastAutoTable.finalY + 15;
+  if (y > 260) {
+    doc.addPage();
+    y = 20;
+  }
+  doc.setFillColor(HEADER_R, HEADER_G, HEADER_B);
+  doc.roundedRect(14, y, pageWidth - 28, 18, 3, 3, 'F');
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(11);
+  doc.setFont('helvetica', 'bold');
+  doc.text('⚡ GARANTIA DE 90 DIAS', pageWidth / 2, y + 7, { align: 'center' });
+  doc.setFontSize(8);
+  doc.setFont('helvetica', 'normal');
+  doc.text('Este serviço possui garantia de 90 dias a partir da data de conclusão.', pageWidth / 2, y + 14, { align: 'center' });
+
   // Footer
   const footerY = doc.internal.pageSize.getHeight() - 15;
   doc.setFontSize(8);
@@ -176,9 +215,10 @@ export const generatePDF = (order: ServiceOrder) => {
   doc.text(
     `Documento gerado em ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`,
     pageWidth / 2,
-    footerY,
+    footerY - 5,
     { align: 'center' }
   );
+  doc.text('© 2026 IT Digital. Todos os direitos reservados.', pageWidth / 2, footerY, { align: 'center' });
 
   doc.save(`Relatorio_OS_${order.id}.pdf`);
 };

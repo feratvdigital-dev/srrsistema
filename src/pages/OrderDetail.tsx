@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import {
   Camera, Download, ArrowLeft, MapPin, Clock, ExternalLink,
   Droplets, Zap, Wrench, Circle, Play, CheckCircle2, Lock,
-  Save, Image as ImageIcon, PenTool, User
+  Save, Image as ImageIcon, PenTool, User, Trash2
 } from 'lucide-react';
 import { STATUS_LABELS, SERVICE_TYPE_LABELS, OrderStatus, ServiceType } from '@/types/serviceOrder';
 import { useToast } from '@/hooks/use-toast';
@@ -34,7 +34,7 @@ const statusConfig: Record<OrderStatus, { icon: React.ElementType; bgClass: stri
 const OrderDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { getOrder, updateOrder } = useOrders();
+  const { getOrder, updateOrder, deleteOrder } = useOrders();
   const { technicians } = useTechnicians();
   const { toast } = useToast();
   const order = getOrder(Number(id));
@@ -338,6 +338,21 @@ const OrderDetail = () => {
               </div>
             </>
           )}
+
+          {/* Delete button */}
+          <Button
+            variant="outline"
+            onClick={() => {
+              if (window.confirm(`Tem certeza que deseja excluir a OS #${order.id}?`)) {
+                deleteOrder(order.id);
+                toast({ title: `OS #${order.id} excluída com sucesso` });
+                navigate('/dashboard');
+              }
+            }}
+            className="w-full h-12 border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground gap-2 font-semibold"
+          >
+            <Trash2 className="h-5 w-5" /> Excluir Ordem de Serviço
+          </Button>
         </div>
 
         {/* Footer */}
