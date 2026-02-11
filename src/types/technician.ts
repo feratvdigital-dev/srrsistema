@@ -5,6 +5,10 @@ export interface Technician {
   email: string;
   specialty: 'hydraulic' | 'electrical' | 'both';
   status: 'available' | 'busy' | 'offline';
+  rg?: string;
+  cpf?: string;
+  profilePhoto?: string;
+  documentPhoto?: string;
 }
 
 export const SPECIALTY_LABELS: Record<string, string> = {

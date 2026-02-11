@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useTechnicians } from '@/contexts/TechnicianContext';
 import { useOrders } from '@/contexts/OrderContext';
 import { Card, CardContent } from '@/components/ui/card';
@@ -7,8 +7,9 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Plus, Phone, Mail, Wrench, Pencil, Trash2 } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Plus, Phone, Mail, Wrench, Pencil, Trash2, Camera, FileText } from 'lucide-react';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { SPECIALTY_LABELS, TECH_STATUS_LABELS } from '@/types/technician';
 import { useToast } from '@/hooks/use-toast';
 
@@ -21,17 +22,35 @@ const Technicians = () => {
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
+  const [rg, setRg] = useState('');
+  const [cpf, setCpf] = useState('');
   const [specialty, setSpecialty] = useState<'hydraulic' | 'electrical' | 'both'>('both');
+  const [profilePhoto, setProfilePhoto] = useState('');
+  const [documentPhoto, setDocumentPhoto] = useState('');
 
-  const resetForm = () => { setName(''); setPhone(''); setEmail(''); setSpecialty('both'); setEditId(null); };
+  const profileRef = useRef<HTMLInputElement>(null);
+  const docRef = useRef<HTMLInputElement>(null);
+
+  const resetForm = () => {
+    setName(''); setPhone(''); setEmail(''); setRg(''); setCpf('');
+    setSpecialty('both'); setEditId(null); setProfilePhoto(''); setDocumentPhoto('');
+  };
+
+  const handleFileUpload = (setter: (v: string) => void) => (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => setter(reader.result as string);
+    reader.readAsDataURL(file);
+  };
 
   const handleSubmit = () => {
     if (!name.trim()) return;
     if (editId) {
-      updateTechnician(editId, { name, phone, email, specialty });
+      updateTechnician(editId, { name, phone, email, specialty, rg, cpf, profilePhoto, documentPhoto });
       toast({ title: 'Técnico atualizado!' });
     } else {
-      addTechnician({ name, phone, email, specialty, status: 'available' });
+      addTechnician({ name, phone, email, specialty, status: 'available', rg, cpf, profilePhoto, documentPhoto });
       toast({ title: 'Técnico adicionado!' });
     }
     resetForm();
@@ -45,7 +64,11 @@ const Technicians = () => {
     setName(t.name);
     setPhone(t.phone);
     setEmail(t.email);
+    setRg(t.rg || '');
+    setCpf(t.cpf || '');
     setSpecialty(t.specialty);
+    setProfilePhoto(t.profilePhoto || '');
+    setDocumentPhoto(t.documentPhoto || '');
     setOpen(true);
   };
 
@@ -58,17 +81,44 @@ const Technicians = () => {
     };
   };
 
+  const getInitials = (n: string) => n.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+
   return (
     <div className="space-y-6">
       <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) resetForm(); }}>
-        <DialogContent>
+        <DialogContent className="max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editId ? 'Editar Técnico' : 'Novo Técnico'}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
+            {/* Profile Photo */}
+            <div className="flex flex-col items-center gap-2">
+              <Avatar className="h-20 w-20 cursor-pointer border-2 border-dashed border-border hover:border-primary transition-colors" onClick={() => profileRef.current?.click()}>
+                {profilePhoto ? (
+                  <AvatarImage src={profilePhoto} alt="Foto de perfil" />
+                ) : (
+                  <AvatarFallback className="bg-primary/10 text-primary">
+                    <Camera className="h-6 w-6" />
+                  </AvatarFallback>
+                )}
+              </Avatar>
+              <span className="text-xs text-muted-foreground">Clique para adicionar foto</span>
+              <input ref={profileRef} type="file" accept="image/*" className="hidden" onChange={handleFileUpload(setProfilePhoto)} />
+            </div>
+
             <div className="space-y-2">
               <Label>Nome *</Label>
               <Input value={name} onChange={e => setName(e.target.value)} />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label>RG</Label>
+                <Input value={rg} onChange={e => setRg(e.target.value)} placeholder="00.000.000-0" />
+              </div>
+              <div className="space-y-2">
+                <Label>CPF</Label>
+                <Input value={cpf} onChange={e => setCpf(e.target.value)} placeholder="000.000.000-00" />
+              </div>
             </div>
             <div className="space-y-2">
               <Label>Telefone</Label>
@@ -89,6 +139,26 @@ const Technicians = () => {
                 </SelectContent>
               </Select>
             </div>
+
+            {/* Document Photo */}
+            <div className="space-y-2">
+              <Label>Documento com Foto</Label>
+              <div
+                onClick={() => docRef.current?.click()}
+                className="border-2 border-dashed border-border rounded-xl p-4 flex flex-col items-center gap-2 cursor-pointer hover:border-primary transition-colors"
+              >
+                {documentPhoto ? (
+                  <img src={documentPhoto} alt="Documento" className="max-h-32 rounded-lg object-contain" />
+                ) : (
+                  <>
+                    <FileText className="h-8 w-8 text-muted-foreground" />
+                    <span className="text-xs text-muted-foreground">Clique para importar documento</span>
+                  </>
+                )}
+              </div>
+              <input ref={docRef} type="file" accept="image/*" className="hidden" onChange={handleFileUpload(setDocumentPhoto)} />
+            </div>
+
             <Button onClick={handleSubmit} className="w-full">{editId ? 'Salvar' : 'Adicionar'}</Button>
           </div>
         </DialogContent>
@@ -117,9 +187,15 @@ const Technicians = () => {
                   <CardContent className="p-5 space-y-3">
                     <div className="flex items-start justify-between">
                       <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center">
-                          <Wrench className="h-6 w-6" />
-                        </div>
+                        <Avatar className="h-12 w-12">
+                          {tech.profilePhoto ? (
+                            <AvatarImage src={tech.profilePhoto} alt={tech.name} />
+                          ) : (
+                            <AvatarFallback className="bg-purple-100 text-purple-600 font-bold">
+                              {getInitials(tech.name)}
+                            </AvatarFallback>
+                          )}
+                        </Avatar>
                         <div>
                           <p className="font-bold">{tech.name}</p>
                           <p className="text-sm text-muted-foreground">{SPECIALTY_LABELS[tech.specialty]}</p>
@@ -132,6 +208,8 @@ const Technicians = () => {
                     <div className="text-sm text-muted-foreground space-y-1">
                       <div className="flex items-center gap-2"><Phone className="h-3 w-3" /> {tech.phone || '-'}</div>
                       <div className="flex items-center gap-2"><Mail className="h-3 w-3" /> {tech.email || '-'}</div>
+                      {tech.cpf && <div className="flex items-center gap-2"><FileText className="h-3 w-3" /> CPF: {tech.cpf}</div>}
+                      {tech.rg && <div className="flex items-center gap-2"><FileText className="h-3 w-3" /> RG: {tech.rg}</div>}
                     </div>
                     <div className="grid grid-cols-3 gap-2">
                       <div className="text-center p-2 rounded-lg bg-muted">
