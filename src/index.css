@@ -6,45 +6,32 @@
 
 @layer base {
   :root {
-    --background: 210 20% 98%;
+    --background: 220 20% 97%;
     --foreground: 215 25% 15%;
-
     --card: 0 0% 100%;
     --card-foreground: 215 25% 15%;
-
     --popover: 0 0% 100%;
     --popover-foreground: 215 25% 15%;
-
     --primary: 207 90% 54%;
     --primary-foreground: 0 0% 100%;
-
-    --secondary: 37 95% 55%;
+    --secondary: 30 95% 55%;
     --secondary-foreground: 0 0% 100%;
-
     --muted: 210 15% 93%;
     --muted-foreground: 215 15% 50%;
-
     --accent: 207 80% 94%;
     --accent-foreground: 207 90% 35%;
-
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-
-    --border: 214 20% 88%;
-    --input: 214 20% 88%;
+    --border: 214 20% 90%;
+    --input: 214 20% 90%;
     --ring: 207 90% 54%;
-
     --radius: 0.75rem;
-
-    --success: 142 70% 45%;
+    --success: 152 60% 45%;
     --success-foreground: 0 0% 100%;
-
-    --warning: 37 95% 55%;
+    --warning: 40 95% 55%;
     --warning-foreground: 0 0% 100%;
-
-    --info: 207 90% 54%;
-    --info-foreground: 0 0% 100%;
-
+    --header-bg: 215 40% 16%;
+    --header-foreground: 0 0% 100%;
     --sidebar-background: 215 25% 15%;
     --sidebar-foreground: 210 15% 90%;
     --sidebar-primary: 207 90% 54%;
@@ -64,7 +51,7 @@
     --popover-foreground: 210 15% 93%;
     --primary: 207 90% 54%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 37 95% 55%;
+    --secondary: 30 95% 55%;
     --secondary-foreground: 0 0% 100%;
     --muted: 215 20% 20%;
     --muted-foreground: 215 15% 60%;
@@ -75,6 +62,8 @@
     --border: 215 20% 22%;
     --input: 215 20% 22%;
     --ring: 207 90% 54%;
+    --header-bg: 215 40% 10%;
+    --header-foreground: 0 0% 100%;
     --sidebar-background: 215 30% 8%;
     --sidebar-foreground: 210 15% 90%;
     --sidebar-primary: 207 90% 54%;
@@ -90,7 +79,6 @@
   * {
     @apply border-border;
   }
-
   body {
     @apply bg-background text-foreground font-sans antialiased;
     font-family: 'Inter', sans-serif;
@@ -98,13 +86,20 @@
 }
 
 @layer components {
-  .status-badge-open {
-    @apply bg-blue-100 text-blue-700 border border-blue-200;
+  .status-open {
+    @apply bg-yellow-50 text-yellow-700 border border-yellow-200;
   }
-  .status-badge-executing {
-    @apply bg-amber-100 text-amber-700 border border-amber-200;
+  .status-executing {
+    @apply bg-blue-50 text-blue-700 border border-blue-200;
   }
-  .status-badge-closed {
-    @apply bg-green-100 text-green-700 border border-green-200;
+  .status-executed {
+    @apply bg-green-50 text-green-700 border border-green-200;
+  }
+  .status-closed {
+    @apply bg-gray-100 text-gray-700 border border-gray-200;
+  }
+  .app-header {
+    background: hsl(var(--header-bg));
+    color: hsl(var(--header-foreground));
   }
 }
