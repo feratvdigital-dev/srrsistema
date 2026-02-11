@@ -23,7 +23,7 @@ export const generatePDF = (order: ServiceOrder) => {
 
   // Add logo to header
   try {
-    doc.addImage(logoSrc, 'PNG', 14, 5, 30, 30);
+    doc.addImage(logoSrc, 'PNG', 14, 6, 28, 28);
   } catch {
     // logo unavailable
   }
@@ -199,14 +199,11 @@ export const generatePDF = (order: ServiceOrder) => {
     y = 20;
   }
   doc.setFillColor(HEADER_R, HEADER_G, HEADER_B);
-  doc.roundedRect(14, y, pageWidth - 28, 18, 3, 3, 'F');
+  doc.roundedRect(14, y, pageWidth - 28, 14, 3, 3, 'F');
   doc.setTextColor(255, 255, 255);
-  doc.setFontSize(11);
-  doc.setFont('helvetica', 'bold');
-  doc.text('⚡ GARANTIA DE 90 DIAS', pageWidth / 2, y + 7, { align: 'center' });
-  doc.setFontSize(8);
+  doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
-  doc.text('Este serviço possui garantia de 90 dias a partir da data de conclusão.', pageWidth / 2, y + 14, { align: 'center' });
+  doc.text('Este servico possui garantia de 90 dias a partir da data de conclusao.', pageWidth / 2, y + 9, { align: 'center' });
 
   // Footer
   const footerY = doc.internal.pageSize.getHeight() - 15;
