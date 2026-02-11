@@ -339,6 +339,11 @@ const OrderDetail = () => {
             </>
           )}
         </div>
+
+        {/* Footer */}
+        <footer className="py-4 text-center text-xs text-muted-foreground border-t mt-6">
+          © 2026 IT Digital. Todos os direitos reservados.
+        </footer>
       </div>
     </div>
   );
