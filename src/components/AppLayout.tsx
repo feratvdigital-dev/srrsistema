@@ -1,91 +1,77 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { Navigate, Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { Bell, BookOpen, BarChart3, Users, Plus, ArrowLeft, LogOut } from 'lucide-react';
+import { Bell, BookOpen, BarChart3, Users, Plus, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import logo from '@/assets/logo.png';
 
 const AppLayout = () => {
-  const { isAuthenticated, logout } = useAuth();
+  const { isAuthenticated } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
 
   if (!isAuthenticated) return <Navigate to="/login" replace />;
 
   const isDashboard = location.pathname === '/dashboard';
-  const isSubPage = !isDashboard;
+  const isOrderDetail = location.pathname.startsWith('/orders/') && location.pathname !== '/orders/new';
 
-  // Determine page title
   const getTitle = () => {
     if (location.pathname === '/dashboard') return { title: 'Gestão de Manutenção', subtitle: 'Painel de controle' };
     if (location.pathname === '/orders/new') return { title: 'Nova Ordem de Serviço', subtitle: '' };
     if (location.pathname === '/technicians') return { title: 'Equipe Técnica', subtitle: 'Gerenciar técnicos' };
     if (location.pathname === '/reports') return { title: 'Relatórios', subtitle: 'Análise de desempenho' };
-    if (location.pathname.startsWith('/orders/')) return { title: '', subtitle: '' }; // handled by detail page
     return { title: 'SR Resolve', subtitle: '' };
   };
 
   const { title, subtitle } = getTitle();
-  const isOrderDetail = location.pathname.startsWith('/orders/') && location.pathname !== '/orders/new';
+  const showBack = !isDashboard && !isOrderDetail;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
       {!isOrderDetail && (
         <header className="app-header sticky top-0 z-50 shadow-lg">
-          <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              {isSubPage && (
-                <button onClick={() => navigate(-1)} className="p-1 hover:opacity-80">
+          <div className="max-w-7xl mx-auto px-3 sm:px-4 h-14 sm:h-16 flex items-center justify-between">
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+              {showBack && (
+                <button onClick={() => navigate(-1)} className="p-1 hover:opacity-80 shrink-0">
                   <ArrowLeft className="h-5 w-5" />
                 </button>
               )}
-              <img src={logo} alt="SR Resolve" className="h-10 w-auto" />
-              <div>
-                <h1 className="font-bold text-base leading-tight">{title}</h1>
-                {subtitle && <p className="text-xs opacity-70">{subtitle}</p>}
+              <img src={logo} alt="SR Resolve" className="h-8 sm:h-10 w-auto shrink-0" />
+              <div className="min-w-0">
+                <h1 className="font-bold text-sm sm:text-base leading-tight truncate">{title}</h1>
+                {subtitle && <p className="text-xs opacity-70 truncate">{subtitle}</p>}
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 sm:gap-2 shrink-0">
               {isDashboard && (
                 <>
-                  <Link to="/dashboard">
-                    <button className="p-2 rounded-lg hover:bg-white/10 transition-colors">
-                      <Bell className="h-5 w-5" />
-                    </button>
-                  </Link>
+                  <button className="p-1.5 sm:p-2 rounded-lg hover:bg-white/10 transition-colors">
+                    <Bell className="h-4 w-4 sm:h-5 sm:w-5" />
+                  </button>
                   <Link to="/technicians">
-                    <button className="p-2 rounded-lg hover:bg-white/10 transition-colors">
-                      <BookOpen className="h-5 w-5" />
+                    <button className="p-1.5 sm:p-2 rounded-lg hover:bg-white/10 transition-colors">
+                      <BookOpen className="h-4 w-4 sm:h-5 sm:w-5" />
                     </button>
                   </Link>
                   <Link to="/reports">
-                    <button className="p-2 rounded-lg hover:bg-white/10 transition-colors">
-                      <BarChart3 className="h-5 w-5" />
+                    <button className="p-1.5 sm:p-2 rounded-lg hover:bg-white/10 transition-colors">
+                      <BarChart3 className="h-4 w-4 sm:h-5 sm:w-5" />
                     </button>
                   </Link>
                   <Link to="/technicians">
-                    <button className="p-2 rounded-lg hover:bg-white/10 transition-colors">
-                      <Users className="h-5 w-5" />
+                    <button className="p-1.5 sm:p-2 rounded-lg hover:bg-white/10 transition-colors">
+                      <Users className="h-4 w-4 sm:h-5 sm:w-5" />
                     </button>
                   </Link>
+                  <Link to="/orders/new">
+                    <Button size="sm" className="bg-secondary hover:bg-secondary/90 text-secondary-foreground ml-1 sm:ml-2 gap-1 font-semibold text-xs sm:text-sm h-8 sm:h-9 px-2 sm:px-3">
+                      <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
+                      <span className="hidden sm:inline">Nova OS</span>
+                    </Button>
+                  </Link>
                 </>
-              )}
-              {isDashboard ? (
-                <Link to="/orders/new">
-                  <Button size="sm" className="bg-secondary hover:bg-secondary/90 text-secondary-foreground ml-2 gap-1 font-semibold">
-                    <Plus className="h-4 w-4" /> Nova OS
-                  </Button>
-                </Link>
-              ) : (
-                !isSubPage && null
-              )}
-              {isSubPage && location.pathname === '/technicians' && (
-                <Link to="/technicians">
-                  <Button size="sm" className="bg-secondary hover:bg-secondary/90 text-secondary-foreground ml-2 gap-1 font-semibold">
-                    <Plus className="h-4 w-4" /> Novo Técnico
-                  </Button>
-                </Link>
               )}
             </div>
           </div>
@@ -93,9 +79,16 @@ const AppLayout = () => {
       )}
 
       {/* Content */}
-      <main className={isOrderDetail ? '' : 'max-w-7xl mx-auto px-4 py-6'}>
+      <main className={`flex-1 ${isOrderDetail ? '' : 'max-w-7xl mx-auto w-full px-3 sm:px-4 py-4 sm:py-6'}`}>
         <Outlet />
       </main>
+
+      {/* Footer */}
+      {!isOrderDetail && (
+        <footer className="py-4 text-center text-xs text-muted-foreground border-t bg-card">
+          © 2026 IT Digital. Todos os direitos reservados.
+        </footer>
+      )}
     </div>
   );
 };
