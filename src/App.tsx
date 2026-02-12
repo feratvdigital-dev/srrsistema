@@ -12,6 +12,8 @@ import NewOrder from "./pages/NewOrder";
 import OrderDetail from "./pages/OrderDetail";
 import Technicians from "./pages/Technicians";
 import Reports from "./pages/Reports";
+import ClientRequest from "./pages/ClientRequest";
+import TicketsGrid from "./pages/TicketsGrid";
 import AppLayout from "./components/AppLayout";
 import NotFound from "./pages/NotFound";
 
@@ -28,6 +30,7 @@ const App = () => (
             <BrowserRouter>
               <Routes>
                 <Route path="/login" element={<Login />} />
+                <Route path="/request" element={<ClientRequest />} />
                 <Route path="/" element={<Navigate to="/login" replace />} />
                 <Route element={<AppLayout />}>
                   <Route path="/dashboard" element={<Dashboard />} />
@@ -35,6 +38,7 @@ const App = () => (
                   <Route path="/orders/:id" element={<OrderDetail />} />
                   <Route path="/technicians" element={<Technicians />} />
                   <Route path="/reports" element={<Reports />} />
+                  <Route path="/tickets" element={<TicketsGrid />} />
                 </Route>
                 <Route path="*" element={<NotFound />} />
               </Routes>

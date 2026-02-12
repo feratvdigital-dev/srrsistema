@@ -1,13 +1,20 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { Navigate, Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { Bell, BookOpen, BarChart3, Users, Plus, ArrowLeft } from 'lucide-react';
+import { Bell, BookOpen, BarChart3, Users, Plus, ArrowLeft, LogOut, Inbox } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import logo from '@/assets/logo.png';
 
 const AppLayout = () => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+
+  const getInitials = (name: string | null) => {
+    if (!name) return '?';
+    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+  };
 
   if (!isAuthenticated) return <Navigate to="/login" replace />;
 
@@ -19,6 +26,7 @@ const AppLayout = () => {
     if (location.pathname === '/orders/new') return { title: 'Nova Ordem de Serviço', subtitle: '' };
     if (location.pathname === '/technicians') return { title: 'Equipe Técnica', subtitle: 'Gerenciar técnicos' };
     if (location.pathname === '/reports') return { title: 'Relatórios', subtitle: 'Análise de desempenho' };
+    if (location.pathname === '/tickets') return { title: 'Chamados', subtitle: 'Solicitações de clientes' };
     return { title: 'SR Resolve', subtitle: '' };
   };
 
@@ -47,6 +55,11 @@ const AppLayout = () => {
             <div className="flex items-center gap-1 sm:gap-2 shrink-0">
               {isDashboard && (
                 <>
+                  <Link to="/tickets">
+                    <button className="p-1.5 sm:p-2 rounded-lg hover:bg-white/10 transition-colors" title="Chamados">
+                      <Inbox className="h-4 w-4 sm:h-5 sm:w-5" />
+                    </button>
+                  </Link>
                   <button className="p-1.5 sm:p-2 rounded-lg hover:bg-white/10 transition-colors">
                     <Bell className="h-4 w-4 sm:h-5 sm:w-5" />
                   </button>
@@ -73,6 +86,28 @@ const AppLayout = () => {
                   </Link>
                 </>
               )}
+
+              {/* Avatar + Logout */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="ml-1 sm:ml-2">
+                    <Avatar className="h-8 w-8 border-2 border-white/30">
+                      <AvatarFallback className="bg-secondary text-secondary-foreground text-xs font-bold">
+                        {getInitials(user)}
+                      </AvatarFallback>
+                    </Avatar>
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <div className="px-3 py-2 border-b">
+                    <p className="text-sm font-medium">{user}</p>
+                    <p className="text-xs text-muted-foreground">Logado</p>
+                  </div>
+                  <DropdownMenuItem onClick={() => { logout(); navigate('/login'); }} className="text-destructive cursor-pointer">
+                    <LogOut className="h-4 w-4 mr-2" /> Sair da Conta
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </header>
