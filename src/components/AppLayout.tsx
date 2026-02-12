@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import logo from '@/assets/logo.png';
+import logoItDigital from '@/assets/logo-itdigital.png';
+import { loadTickets } from '@/pages/ClientRequest';
 
 const AppLayout = () => {
   const { isAuthenticated, user, logout } = useAuth();
@@ -56,8 +58,16 @@ const AppLayout = () => {
               {isDashboard && (
                 <>
                   <Link to="/tickets">
-                    <button className="p-1.5 sm:p-2 rounded-lg hover:bg-white/10 transition-colors" title="Chamados">
+                    <button className="p-1.5 sm:p-2 rounded-lg hover:bg-white/10 transition-colors relative" title="Chamados">
                       <Inbox className="h-4 w-4 sm:h-5 sm:w-5" />
+                      {(() => {
+                        const pending = loadTickets().filter(t => t.status === 'pending').length;
+                        return pending > 0 ? (
+                          <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full h-4 w-4 flex items-center justify-center">
+                            {pending > 9 ? '9+' : pending}
+                          </span>
+                        ) : null;
+                      })()}
                     </button>
                   </Link>
                   <button className="p-1.5 sm:p-2 rounded-lg hover:bg-white/10 transition-colors">
@@ -120,8 +130,10 @@ const AppLayout = () => {
 
       {/* Footer */}
       {!isOrderDetail && (
-        <footer className="py-4 text-center text-xs text-muted-foreground border-t bg-card">
-          © 2026 IT Digital. Todos os direitos reservados.
+        <footer className="py-4 border-t bg-card flex items-center justify-center gap-2">
+          <span className="text-xs text-muted-foreground">© 2026</span>
+          <img src={logoItDigital} alt="IT Digital" className="h-5 w-auto" />
+          <span className="text-xs text-muted-foreground">IT Digital. Todos os direitos reservados.</span>
         </footer>
       )}
     </div>
