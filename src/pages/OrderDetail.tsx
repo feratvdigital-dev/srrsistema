@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useOrders } from '@/contexts/OrderContext';
 import { useTechnicians } from '@/contexts/TechnicianContext';
@@ -45,9 +45,7 @@ const OrderDetail = () => {
   const [materialDescription, setMaterialDescription] = useState(order?.materialDescription || '');
   const [assignedTechnician, setAssignedTechnician] = useState(order?.assignedTechnician || '');
 
-  const beforeRef = useRef<HTMLInputElement>(null);
-  const duringRef = useRef<HTMLInputElement>(null);
-  const afterRef = useRef<HTMLInputElement>(null);
+  // No refs needed - using label approach for better mobile compatibility
 
   if (!order) {
     return (
@@ -110,9 +108,9 @@ const OrderDetail = () => {
   const isEditable = !isClosed;
 
   const photoSections = [
-    { key: 'before' as const, label: 'ANTES', ref: beforeRef, icon: ImageIcon, emoji: '📷' },
-    { key: 'during' as const, label: 'DURANTE', ref: duringRef, icon: PenTool, emoji: '🔧' },
-    { key: 'after' as const, label: 'DEPOIS', ref: afterRef, icon: CheckCircle2, emoji: '✅' },
+    { key: 'before' as const, label: 'ANTES', emoji: '📷' },
+    { key: 'during' as const, label: 'DURANTE', emoji: '🔧' },
+    { key: 'after' as const, label: 'DEPOIS', emoji: '✅' },
   ];
 
   const total = (parseFloat(laborCost) || 0) + (parseFloat(materialCost) || 0);
@@ -207,7 +205,7 @@ const OrderDetail = () => {
         <Card className="border-0 shadow-sm">
           <CardHeader><CardTitle className="text-base">Registro Fotográfico</CardTitle></CardHeader>
           <CardContent className="space-y-6">
-            {photoSections.map(({ key, label, ref, emoji }) => (
+            {photoSections.map(({ key, label, emoji }) => (
               <div key={key}>
                 <p className="text-sm font-semibold mb-2">{emoji} Fotos - {label}</p>
                 <div className="flex gap-3 flex-wrap">
@@ -216,22 +214,23 @@ const OrderDetail = () => {
                   ))}
                   {isEditable && (
                     <>
-                      <button
-                        type="button"
-                        onClick={() => ref.current?.click()}
-                        className="w-32 h-32 border-2 border-dashed border-border rounded-xl flex flex-col items-center justify-center gap-2 text-muted-foreground hover:border-primary hover:text-primary transition-colors"
+                      <label
+                        htmlFor={`photo-${key}`}
+                        className="w-32 h-32 border-2 border-dashed border-border rounded-xl flex flex-col items-center justify-center gap-2 text-muted-foreground hover:border-primary hover:text-primary transition-colors cursor-pointer"
                       >
                         <Camera className="h-6 w-6" />
                         <span className="text-xs">Adicionar</span>
-                      </button>
+                      </label>
                       <input
-                        ref={ref}
+                        id={`photo-${key}`}
                         type="file"
                         accept="image/*"
-                        
                         multiple
                         className="hidden"
-                        onChange={e => handlePhotoUpload(key, e.target.files)}
+                        onChange={e => {
+                          handlePhotoUpload(key, e.target.files);
+                          e.target.value = '';
+                        }}
                       />
                     </>
                   )}
