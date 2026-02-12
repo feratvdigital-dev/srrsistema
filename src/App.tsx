@@ -14,6 +14,7 @@ import Technicians from "./pages/Technicians";
 import Reports from "./pages/Reports";
 import ClientRequest from "./pages/ClientRequest";
 import TicketsGrid from "./pages/TicketsGrid";
+import OrdersMap from "./pages/OrdersMap";
 import AppLayout from "./components/AppLayout";
 import NotFound from "./pages/NotFound";
 
@@ -39,6 +40,7 @@ const App = () => (
                   <Route path="/technicians" element={<Technicians />} />
                   <Route path="/reports" element={<Reports />} />
                   <Route path="/tickets" element={<TicketsGrid />} />
+                  <Route path="/map" element={<OrdersMap />} />
                 </Route>
                 <Route path="*" element={<NotFound />} />
               </Routes>

@@ -1,6 +1,6 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { Navigate, Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { Bell, BookOpen, BarChart3, Users, Plus, ArrowLeft, LogOut, Inbox } from 'lucide-react';
+import { Bell, BookOpen, BarChart3, Users, Plus, ArrowLeft, LogOut, Inbox, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -29,6 +29,7 @@ const AppLayout = () => {
     if (location.pathname === '/technicians') return { title: 'Equipe Técnica', subtitle: 'Gerenciar técnicos' };
     if (location.pathname === '/reports') return { title: 'Relatórios', subtitle: 'Análise de desempenho' };
     if (location.pathname === '/tickets') return { title: 'Chamados', subtitle: 'Solicitações de clientes' };
+    if (location.pathname === '/map') return { title: 'Mapa', subtitle: 'Localização das OS' };
     return { title: 'SR Resolve', subtitle: '' };
   };
 
@@ -68,6 +69,11 @@ const AppLayout = () => {
                           </span>
                         ) : null;
                       })()}
+                    </button>
+                  </Link>
+                  <Link to="/map">
+                    <button className="p-1.5 sm:p-2 rounded-lg hover:bg-white/10 transition-colors" title="Mapa de OS">
+                      <MapPin className="h-4 w-4 sm:h-5 sm:w-5" />
                     </button>
                   </Link>
                   <button className="p-1.5 sm:p-2 rounded-lg hover:bg-white/10 transition-colors">

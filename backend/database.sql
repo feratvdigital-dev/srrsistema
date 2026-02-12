@@ -66,3 +66,25 @@ CREATE TABLE IF NOT EXISTS order_photos (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (order_id) REFERENCES service_orders(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
+
+-- Tabela de Chamados de Clientes
+CREATE TABLE IF NOT EXISTS client_tickets (
+  id VARCHAR(36) PRIMARY KEY,
+  name VARCHAR(200) NOT NULL,
+  whatsapp VARCHAR(20) NOT NULL,
+  location TEXT NOT NULL,
+  description TEXT NOT NULL,
+  status ENUM('pending', 'accepted', 'rejected', 'in_progress', 'completed') DEFAULT 'pending',
+  linked_order_id INT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (linked_order_id) REFERENCES service_orders(id) ON DELETE SET NULL
+) ENGINE=InnoDB;
+
+-- Tabela de Fotos dos Chamados
+CREATE TABLE IF NOT EXISTS ticket_photos (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  ticket_id VARCHAR(36) NOT NULL,
+  photo_data LONGTEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (ticket_id) REFERENCES client_tickets(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
