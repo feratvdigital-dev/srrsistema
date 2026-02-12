@@ -47,4 +47,13 @@ export const authApi = {
   login: (username: string, password: string) => request<any>('/auth.php', { method: 'POST', body: JSON.stringify({ username, password }) }),
 };
 
-export default { ordersApi, techniciansApi, authApi };
+// ===== Tickets =====
+export const ticketsApi = {
+  getAll: () => request<any[]>('/tickets.php'),
+  getById: (id: string) => request<any>(`/tickets.php?id=${id}`),
+  create: (ticket: any) => request<any>('/tickets.php', { method: 'POST', body: JSON.stringify(ticket) }),
+  update: (id: string, updates: any) => request<any>('/tickets.php', { method: 'PUT', body: JSON.stringify({ id, ...updates }) }),
+  delete: (id: string) => request<void>(`/tickets.php?id=${id}`, { method: 'DELETE' }),
+};
+
+export default { ordersApi, techniciansApi, authApi, ticketsApi };
