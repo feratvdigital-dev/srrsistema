@@ -45,11 +45,23 @@ const NewOrder = () => {
           setLocationLoading(false);
           toast({ title: 'Localização capturada com sucesso!' });
         },
-        () => {
+        (error) => {
           setLocationLoading(false);
-          toast({ title: 'Erro ao capturar localização', variant: 'destructive' });
+          let msg = 'Erro ao capturar localização';
+          if (error.code === 1) msg = 'Permissão de localização negada';
+          else if (error.code === 2) msg = 'Localização indisponível';
+          else if (error.code === 3) msg = 'Tempo esgotado ao buscar localização';
+          toast({ title: msg, variant: 'destructive' });
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 15000,
+          maximumAge: 0,
         }
       );
+    } else {
+      setLocationLoading(false);
+      toast({ title: 'Geolocalização não suportada neste navegador', variant: 'destructive' });
     }
   };
 
