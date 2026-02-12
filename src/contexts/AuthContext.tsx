@@ -18,6 +18,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   });
 
   const login = (username: string, password: string): boolean => {
+    // Admin login
     if (username === 'srresolve' && password === 'sr604320') {
       setIsAuthenticated(true);
       setUser(username);
@@ -25,6 +26,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       localStorage.setItem('sr_user', username);
       return true;
     }
+    // Technician login
+    try {
+      const techs = JSON.parse(localStorage.getItem('sr_technicians') || '[]');
+      const tech = techs.find((t: any) => t.username === username && t.password === password);
+      if (tech) {
+        setIsAuthenticated(true);
+        setUser(tech.name);
+        localStorage.setItem('sr_auth', 'true');
+        localStorage.setItem('sr_user', tech.name);
+        return true;
+      }
+    } catch {}
     return false;
   };
 

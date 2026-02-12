@@ -28,7 +28,7 @@ const Login = () => {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4" style={{ background: 'linear-gradient(135deg, hsl(215 40% 16%), hsl(215 40% 22%))' }}>
       <Card className="w-full max-w-sm sm:max-w-md shadow-2xl border-0 overflow-hidden">
-        <div className="bg-gradient-to-r from-primary to-primary/80 p-6 sm:p-8 flex flex-col items-center">
+        <div className="p-6 sm:p-8 flex flex-col items-center" style={{ background: 'linear-gradient(135deg, hsl(215 40% 16%), hsl(215 40% 22%))' }}>
           <img src={logo} alt="SR Resolve" className="h-16 sm:h-20 w-auto mb-3 sm:mb-4" />
           <h1 className="text-xl sm:text-2xl font-bold text-primary-foreground">SR Resolve</h1>
           <p className="text-primary-foreground/80 text-xs sm:text-sm">Gestão de Manutenção</p>
@@ -50,7 +50,8 @@ const Login = () => {
               </div>
             </div>
             {error && <p className="text-sm text-destructive font-medium">{error}</p>}
-            <Button type="submit" className="w-full h-11 sm:h-12 text-base font-semibold">Entrar</Button>
+            <Button type="submit" className="w-full h-11 sm:h-12 text-base font-semibold bg-green-600 hover:bg-green-700 text-white">Entrar</Button>
+            <button type="button" className="w-full text-sm text-primary hover:underline mt-2">Esqueci minha senha</button>
           </form>
         </CardContent>
       </Card>

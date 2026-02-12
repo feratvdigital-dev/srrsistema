@@ -27,6 +27,8 @@ const Technicians = () => {
   const [specialty, setSpecialty] = useState<'hydraulic' | 'electrical' | 'both'>('both');
   const [profilePhoto, setProfilePhoto] = useState('');
   const [documentPhoto, setDocumentPhoto] = useState('');
+  const [techUsername, setTechUsername] = useState('');
+  const [techPassword, setTechPassword] = useState('');
 
   const profileRef = useRef<HTMLInputElement>(null);
   const docRef = useRef<HTMLInputElement>(null);
@@ -34,6 +36,7 @@ const Technicians = () => {
   const resetForm = () => {
     setName(''); setPhone(''); setEmail(''); setRg(''); setCpf('');
     setSpecialty('both'); setEditId(null); setProfilePhoto(''); setDocumentPhoto('');
+    setTechUsername(''); setTechPassword('');
   };
 
   const handleFileUpload = (setter: (v: string) => void) => (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -47,10 +50,10 @@ const Technicians = () => {
   const handleSubmit = () => {
     if (!name.trim()) return;
     if (editId) {
-      updateTechnician(editId, { name, phone, email, specialty, rg, cpf, profilePhoto, documentPhoto });
+      updateTechnician(editId, { name, phone, email, specialty, rg, cpf, profilePhoto, documentPhoto, username: techUsername, password: techPassword });
       toast({ title: 'Técnico atualizado!' });
     } else {
-      addTechnician({ name, phone, email, specialty, status: 'available', rg, cpf, profilePhoto, documentPhoto });
+      addTechnician({ name, phone, email, specialty, status: 'available', rg, cpf, profilePhoto, documentPhoto, username: techUsername, password: techPassword });
       toast({ title: 'Técnico adicionado!' });
     }
     resetForm();
@@ -69,6 +72,8 @@ const Technicians = () => {
     setSpecialty(t.specialty);
     setProfilePhoto(t.profilePhoto || '');
     setDocumentPhoto(t.documentPhoto || '');
+    setTechUsername(t.username || '');
+    setTechPassword(t.password || '');
     setOpen(true);
   };
 
@@ -157,6 +162,21 @@ const Technicians = () => {
                 )}
               </div>
               <input ref={docRef} type="file" accept="image/*" className="hidden" onChange={handleFileUpload(setDocumentPhoto)} />
+            </div>
+
+            {/* Access Credentials */}
+            <div className="space-y-2 border-t pt-4">
+              <Label className="font-semibold">Acesso ao Sistema</Label>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label>Usuário</Label>
+                  <Input value={techUsername} onChange={e => setTechUsername(e.target.value)} placeholder="Login do técnico" />
+                </div>
+                <div className="space-y-2">
+                  <Label>Senha</Label>
+                  <Input type="password" value={techPassword} onChange={e => setTechPassword(e.target.value)} placeholder="Senha" />
+                </div>
+              </div>
             </div>
 
             <Button onClick={handleSubmit} className="w-full">{editId ? 'Salvar' : 'Adicionar'}</Button>
