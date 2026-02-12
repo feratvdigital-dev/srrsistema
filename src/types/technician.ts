@@ -9,6 +9,8 @@ export interface Technician {
   cpf?: string;
   profilePhoto?: string;
   documentPhoto?: string;
+  username?: string;
+  password?: string;
 }
 
 export const SPECIALTY_LABELS: Record<string, string> = {
