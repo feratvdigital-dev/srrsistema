@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Camera, CheckCircle2, Send, MapPin, Navigation } from 'lucide-react';
+import { Camera, CheckCircle2, Send } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import logo from '@/assets/logo.png';
 
@@ -41,28 +41,9 @@ const ClientRequest = () => {
   const [location, setLocation] = useState('');
   const [description, setDescription] = useState('');
   const [photos, setPhotos] = useState<string[]>([]);
-  const [latitude, setLatitude] = useState<number | undefined>();
-  const [longitude, setLongitude] = useState<number | undefined>();
-  const [locationLoading, setLocationLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [ticketId, setTicketId] = useState('');
 
-  const getGPS = () => {
-    setLocationLoading(true);
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setLatitude(pos.coords.latitude);
-        setLongitude(pos.coords.longitude);
-        setLocationLoading(false);
-        toast({ title: 'Localização capturada!' });
-      },
-      () => {
-        setLocationLoading(false);
-        toast({ title: 'Erro ao capturar localização', variant: 'destructive' });
-      },
-      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
-    );
-  };
 
   const handlePhotos = (files: FileList | null) => {
     if (!files) return;
@@ -80,7 +61,7 @@ const ClientRequest = () => {
     e.preventDefault();
     const ticket: ClientTicket = {
       id: `T${Date.now()}`,
-      name, whatsapp, location, latitude, longitude,
+      name, whatsapp, location,
       description, photos, status: 'pending',
       createdAt: new Date().toISOString(),
     };
@@ -100,7 +81,7 @@ const ClientRequest = () => {
             <CheckCircle2 className="h-16 w-16 text-green-500 mx-auto" />
             <h2 className="text-xl font-bold">Chamado Enviado!</h2>
             <p className="text-muted-foreground">Seu chamado <strong>{ticketId}</strong> foi registrado. Você receberá uma mensagem no WhatsApp quando ele for aceito.</p>
-            <Button onClick={() => { setSubmitted(false); setName(''); setWhatsapp(''); setLocation(''); setDescription(''); setPhotos([]); setLatitude(undefined); setLongitude(undefined); }} variant="outline" className="w-full">
+            <Button onClick={() => { setSubmitted(false); setName(''); setWhatsapp(''); setLocation(''); setDescription(''); setPhotos([]); }} variant="outline" className="w-full">
               Enviar Outro Chamado
             </Button>
           </CardContent>
@@ -141,28 +122,6 @@ const ClientRequest = () => {
             </CardContent>
           </Card>
 
-          <Card className="border-0 shadow-sm">
-            <CardHeader><CardTitle className="text-base">Localização GPS</CardTitle></CardHeader>
-            <CardContent>
-              {latitude && longitude ? (
-                <div className="flex items-center gap-3 p-3 rounded-xl bg-green-50 border border-green-200">
-                  <CheckCircle2 className="h-6 w-6 text-green-600" />
-                  <div className="flex-1">
-                    <p className="font-medium text-green-700 text-sm">Localização capturada</p>
-                    <p className="text-xs text-green-600">{latitude.toFixed(6)}, {longitude.toFixed(6)}</p>
-                  </div>
-                  <button type="button" onClick={() => window.open(`https://maps.google.com/?q=${latitude},${longitude}`, '_blank')} className="p-1 text-green-600">
-                    <Navigation className="h-4 w-4" />
-                  </button>
-                </div>
-              ) : (
-                <Button type="button" variant="outline" onClick={getGPS} disabled={locationLoading} className="w-full gap-2">
-                  <MapPin className="h-4 w-4" />
-                  {locationLoading ? 'Capturando...' : 'Capturar Localização'}
-                </Button>
-              )}
-            </CardContent>
-          </Card>
 
           <Card className="border-0 shadow-sm">
             <CardHeader><CardTitle className="text-base">Descreva o Problema</CardTitle></CardHeader>

@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { CheckCircle2, XCircle, Clock, Eye, MessageCircle, Phone } from 'lucide-react';
+import { CheckCircle2, XCircle, Clock, Eye, Phone, MapPin } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 const STATUS_LABELS: Record<ClientTicket['status'], string> = {
@@ -55,8 +55,6 @@ const TicketsGrid = () => {
         materialCost: 0,
         materialDescription: '',
         assignedTechnician: '',
-        latitude: ticket.latitude,
-        longitude: ticket.longitude,
       });
 
       // Link order to ticket
@@ -123,7 +121,23 @@ const TicketsGrid = () => {
                   <div className="flex items-center gap-1">
                     <Phone className="h-3 w-3" /> {ticket.whatsapp}
                   </div>
-                  <p>{ticket.location}</p>
+                  <a
+                    href={`https://www.google.com/maps/search/${encodeURIComponent(ticket.location)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1 text-primary hover:underline font-medium"
+                  >
+                    <MapPin className="h-3 w-3" /> {ticket.location}
+                  </a>
+                  {(() => {
+                    const parts = ticket.location.split(',').map(s => s.trim());
+                    const city = parts.length >= 2 ? parts[parts.length - 2] || parts[parts.length - 1] : '';
+                    return city ? (
+                      <Badge className="bg-primary/10 text-primary border-0 text-[10px] font-bold mt-1">
+                        📍 {city}
+                      </Badge>
+                    ) : null;
+                  })()}
                   <p>{new Date(ticket.createdAt).toLocaleDateString('pt-BR')} {new Date(ticket.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</p>
                 </div>
 
