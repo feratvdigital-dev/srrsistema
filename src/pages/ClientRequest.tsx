@@ -4,10 +4,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Camera, CheckCircle2, Search, Send } from 'lucide-react';
+import { Camera, CheckCircle2, Search, Send, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import logo from '@/assets/logo.png';
 import { supabase } from '@/integrations/supabase/client';
+import { uploadPhotosFromFiles } from '@/utils/uploadPhoto';
 
 export interface ClientTicket {
   id: string;
@@ -53,17 +54,19 @@ const ClientRequest = () => {
   const [photos, setPhotos] = useState<string[]>([]);
   const [submitted, setSubmitted] = useState(false);
   const [ticketId, setTicketId] = useState('');
+  const [uploading, setUploading] = useState(false);
 
-  const handlePhotos = (files: FileList | null) => {
-    if (!files) return;
-    const readers = Array.from(files).map(file =>
-      new Promise<string>(resolve => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result as string);
-        reader.readAsDataURL(file);
-      })
-    );
-    Promise.all(readers).then(results => setPhotos(prev => [...prev, ...results]));
+  const handlePhotos = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    setUploading(true);
+    try {
+      const urls = await uploadPhotosFromFiles(files, 'tickets');
+      setPhotos(prev => [...prev, ...urls]);
+    } catch {
+      toast({ title: 'Erro ao enviar fotos', variant: 'destructive' });
+    } finally {
+      setUploading(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -155,10 +158,10 @@ const ClientRequest = () => {
                     <img key={i} src={p} alt={`Foto ${i + 1}`} className="w-24 h-24 object-cover rounded-xl border" />
                   ))}
                   <label htmlFor="client-photos" className="w-24 h-24 border-2 border-dashed border-border rounded-xl flex flex-col items-center justify-center gap-1 text-muted-foreground hover:border-primary hover:text-primary transition-colors cursor-pointer">
-                    <Camera className="h-5 w-5" />
-                    <span className="text-xs">Adicionar</span>
+                    {uploading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Camera className="h-5 w-5" />}
+                    <span className="text-xs">{uploading ? 'Enviando...' : 'Adicionar'}</span>
                   </label>
-                  <input id="client-photos" type="file" accept="image/*" multiple className="hidden" onChange={e => { handlePhotos(e.target.files); e.target.value = ''; }} />
+                  <input id="client-photos" type="file" accept="image/*" multiple className="hidden" onChange={e => { handlePhotos(e.target.files); e.target.value = ''; }} disabled={uploading} />
                 </div>
               </div>
             </CardContent>
