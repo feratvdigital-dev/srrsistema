@@ -12,7 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import {
   Camera, Download, ArrowLeft, MapPin, Clock, ExternalLink,
   Droplets, Zap, Wrench, Circle, Play, CheckCircle2, Lock,
-  Save, Image as ImageIcon, PenTool, User, Trash2, Loader2
+  Save, Image as ImageIcon, PenTool, User, Trash2, Loader2,
+  FileText, XCircle, DollarSign
 } from 'lucide-react';
 import { STATUS_LABELS, SERVICE_TYPE_LABELS, OrderStatus, ServiceType } from '@/types/serviceOrder';
 import { useToast } from '@/hooks/use-toast';
@@ -27,6 +28,7 @@ const serviceTypeIcons: Record<ServiceType, React.ElementType> = {
 
 const statusConfig: Record<OrderStatus, { icon: React.ElementType; bgClass: string; textClass: string }> = {
   open: { icon: Circle, bgClass: 'bg-yellow-50', textClass: 'text-yellow-700' },
+  quote: { icon: FileText, bgClass: 'bg-purple-50', textClass: 'text-purple-700' },
   executing: { icon: Play, bgClass: 'bg-blue-50', textClass: 'text-blue-700' },
   executed: { icon: CheckCircle2, bgClass: 'bg-green-50', textClass: 'text-green-700' },
   closed: { icon: Lock, bgClass: 'bg-gray-100', textClass: 'text-gray-700' },
@@ -45,6 +47,9 @@ const OrderDetail = () => {
   const [materialCost, setMaterialCost] = useState(order?.materialCost?.toString() || '');
   const [materialDescription, setMaterialDescription] = useState(order?.materialDescription || '');
   const [assignedTechnician, setAssignedTechnician] = useState(order?.assignedTechnician || '');
+  const [visitCost, setVisitCost] = useState('');
+  const [showRejectForm, setShowRejectForm] = useState(false);
+  const [uploadingPhase, setUploadingPhase] = useState<string | null>(null);
 
   // No refs needed - using label approach for better mobile compatibility
 
@@ -56,8 +61,6 @@ const OrderDetail = () => {
       </div>
     );
   }
-
-  const [uploadingPhase, setUploadingPhase] = useState<string | null>(null);
 
   const handlePhotoUpload = async (phase: 'before' | 'during' | 'after', files: FileList | null) => {
     if (!files) return;
@@ -297,9 +300,62 @@ const OrderDetail = () => {
               <Button onClick={handleSave} className="w-full h-12 bg-secondary hover:bg-secondary/90 text-secondary-foreground gap-2 font-semibold">
                 <Save className="h-5 w-5" /> Salvar Alterações
               </Button>
-              <Button onClick={() => handleStatusChange('executing')} className="w-full h-12 bg-primary hover:bg-primary/90 gap-2 font-semibold">
-                <Play className="h-5 w-5" /> Iniciar Execução
+              <Button onClick={() => handleStatusChange('quote')} className="w-full h-12 bg-purple-600 hover:bg-purple-700 text-white gap-2 font-semibold">
+                <FileText className="h-5 w-5" /> Enviar Orçamento
               </Button>
+            </>
+          )}
+          {order.status === 'quote' && (
+            <>
+              <Button onClick={handleSave} className="w-full h-12 bg-secondary hover:bg-secondary/90 text-secondary-foreground gap-2 font-semibold">
+                <Save className="h-5 w-5" /> Salvar Alterações
+              </Button>
+              <Button onClick={() => handleStatusChange('executing')} className="w-full h-12 bg-primary hover:bg-primary/90 gap-2 font-semibold">
+                <CheckCircle2 className="h-5 w-5" /> Cliente Aprovou - Iniciar Serviço
+              </Button>
+              {!showRejectForm ? (
+                <Button onClick={() => setShowRejectForm(true)} variant="outline" className="w-full h-12 border-destructive text-destructive hover:bg-destructive/10 gap-2 font-semibold">
+                  <XCircle className="h-5 w-5" /> Cliente Recusou Orçamento
+                </Button>
+              ) : (
+                <Card className="border-destructive/30">
+                  <CardContent className="p-4 space-y-3">
+                    <p className="text-sm font-semibold text-destructive">Orçamento Recusado</p>
+                    <div className="space-y-2">
+                      <Label>Valor da Visita (R$)</Label>
+                      <Input
+                        type="number"
+                        inputMode="numeric"
+                        step="0.01"
+                        min="0"
+                        value={visitCost}
+                        onChange={e => setVisitCost(e.target.value)}
+                        placeholder="0,00"
+                      />
+                    </div>
+                    <Button
+                      onClick={async () => {
+                        const cost = parseFloat(visitCost) || 0;
+                        await updateOrder(order.id, {
+                          status: 'closed',
+                          laborCost: cost,
+                          materialCost: 0,
+                          observation: observation ? `${observation}\n\nOrçamento recusado pelo cliente.` : 'Orçamento recusado pelo cliente.',
+                          closedAt: new Date().toISOString(),
+                        });
+                        toast({ title: `OS #${order.id} encerrada - Orçamento recusado` });
+                        generatePDF({ ...order, status: 'closed', laborCost: cost, materialCost: 0, closedAt: new Date().toISOString() } as typeof order);
+                      }}
+                      className="w-full bg-destructive hover:bg-destructive/90 text-destructive-foreground gap-2 font-semibold"
+                    >
+                      <Lock className="h-4 w-4" /> Cobrar Visita e Encerrar
+                    </Button>
+                    <Button variant="ghost" className="w-full text-sm" onClick={() => setShowRejectForm(false)}>
+                      Cancelar
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
             </>
           )}
           {order.status === 'executing' && (
@@ -307,7 +363,7 @@ const OrderDetail = () => {
               <Button onClick={handleSave} className="w-full h-12 bg-secondary hover:bg-secondary/90 text-secondary-foreground gap-2 font-semibold">
                 <Save className="h-5 w-5" /> Salvar Alterações
               </Button>
-              <Button onClick={() => handleStatusChange('executed')} className="w-full h-12 bg-success hover:bg-success/90 text-success-foreground gap-2 font-semibold">
+              <Button onClick={() => handleStatusChange('executed')} className="w-full h-12 bg-green-600 hover:bg-green-700 text-white gap-2 font-semibold">
                 <CheckCircle2 className="h-5 w-5" /> Marcar como Executado
               </Button>
             </>
@@ -317,7 +373,7 @@ const OrderDetail = () => {
               <Button onClick={handleSave} className="w-full h-12 bg-secondary hover:bg-secondary/90 text-secondary-foreground gap-2 font-semibold">
                 <Save className="h-5 w-5" /> Salvar Alterações
               </Button>
-              <Button onClick={() => handleStatusChange('closed')} className="w-full h-12 bg-success hover:bg-success/90 text-success-foreground gap-2 font-semibold">
+              <Button onClick={() => handleStatusChange('closed')} className="w-full h-12 bg-green-600 hover:bg-green-700 text-white gap-2 font-semibold">
                 <Lock className="h-5 w-5" /> Encerrar OS
               </Button>
             </>

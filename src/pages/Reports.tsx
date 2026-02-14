@@ -51,6 +51,7 @@ const Reports = () => {
   // Status distribution
   const statusData = [
     { name: 'Em Aberto', value: filtered.filter(o => o.status === 'open').length },
+    { name: 'Orçamento', value: filtered.filter(o => o.status === 'quote').length },
     { name: 'Em Execução', value: filtered.filter(o => o.status === 'executing').length },
     { name: 'Executado', value: filtered.filter(o => o.status === 'executed').length },
     { name: 'Encerrado', value: filtered.filter(o => o.status === 'closed').length },

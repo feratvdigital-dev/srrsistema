@@ -13,6 +13,7 @@ L.Icon.Default.mergeOptions({
 
 const STATUS_MAP: Record<OrderStatus, { label: string; emoji: string; color: string; bg: string }> = {
   open: { label: 'Em Aberto', emoji: '📋', color: '#f59e0b', bg: 'bg-amber-500' },
+  quote: { label: 'Orçamento', emoji: '💰', color: '#9333ea', bg: 'bg-purple-600' },
   executing: { label: 'Em Execução', emoji: '🔧', color: '#2563eb', bg: 'bg-blue-600' },
   executed: { label: 'Executado', emoji: '✅', color: '#16a34a', bg: 'bg-green-600' },
   closed: { label: 'Encerrado', emoji: '🔒', color: '#6b7280', bg: 'bg-gray-500' },
@@ -23,7 +24,7 @@ const OrdersMap = () => {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
   const [filters, setFilters] = useState<Record<OrderStatus, boolean>>({
-    open: true, executing: true, executed: true, closed: true,
+    open: true, quote: true, executing: true, executed: true, closed: true,
   });
 
   const toggleFilter = (status: OrderStatus) => {

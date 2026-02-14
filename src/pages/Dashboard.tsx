@@ -17,6 +17,7 @@ import {
 
 const statusIcons: Record<OrderStatus, { icon: React.ElementType; bgClass: string; textClass: string }> = {
   open: { icon: Circle, bgClass: 'bg-yellow-100', textClass: 'text-yellow-600' },
+  quote: { icon: FileText, bgClass: 'bg-purple-100', textClass: 'text-purple-600' },
   executing: { icon: Play, bgClass: 'bg-blue-100', textClass: 'text-blue-600' },
   executed: { icon: CheckCircle2, bgClass: 'bg-green-100', textClass: 'text-green-600' },
   closed: { icon: Lock, bgClass: 'bg-gray-100', textClass: 'text-gray-600' },
@@ -43,6 +44,7 @@ const Dashboard = () => {
   const stats = [
     { label: 'Total de OS', value: orders.length, icon: FileText, bgClass: 'bg-gray-100', textClass: 'text-gray-600' },
     { label: 'Em Aberto', value: orders.filter(o => o.status === 'open').length, icon: Circle, bgClass: 'bg-yellow-100', textClass: 'text-yellow-600' },
+    { label: 'Orçamento', value: orders.filter(o => o.status === 'quote').length, icon: FileText, bgClass: 'bg-purple-100', textClass: 'text-purple-600' },
     { label: 'Em Execução', value: orders.filter(o => o.status === 'executing').length, icon: Play, bgClass: 'bg-blue-100', textClass: 'text-blue-600' },
     { label: 'Executado', value: orders.filter(o => o.status === 'executed').length, icon: CheckCircle2, bgClass: 'bg-green-100', textClass: 'text-green-600' },
     { label: 'Encerrado', value: orders.filter(o => o.status === 'closed').length, icon: Lock, bgClass: 'bg-gray-100', textClass: 'text-gray-500' },
@@ -95,7 +97,7 @@ const Dashboard = () => {
               />
             </div>
             <div className="flex gap-1 flex-wrap">
-              {(['all', 'open', 'executing', 'executed', 'closed'] as const).map(s => (
+              {(['all', 'open', 'quote', 'executing', 'executed', 'closed'] as const).map(s => (
                 <Button
                   key={s}
                   variant={statusFilter === s ? 'default' : 'outline'}
