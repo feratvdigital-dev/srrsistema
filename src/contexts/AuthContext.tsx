@@ -1,9 +1,10 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
 interface AuthContextType {
   isAuthenticated: boolean;
   user: string | null;
-  login: (username: string, password: string) => boolean;
+  login: (username: string, password: string) => Promise<boolean>;
   logout: () => void;
 }
 
@@ -17,27 +18,39 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return localStorage.getItem('sr_user');
   });
 
-  const login = (username: string, password: string): boolean => {
-    // Admin login
-    if (username === 'srresolve' && password === 'sr604320') {
+  const login = async (username: string, password: string): Promise<boolean> => {
+    // Check app_users table
+    const { data: appUser } = await supabase
+      .from('app_users')
+      .select('*')
+      .eq('username', username)
+      .eq('password', password)
+      .maybeSingle();
+
+    if (appUser) {
       setIsAuthenticated(true);
       setUser(username);
       localStorage.setItem('sr_auth', 'true');
       localStorage.setItem('sr_user', username);
       return true;
     }
-    // Technician login
-    try {
-      const techs = JSON.parse(localStorage.getItem('sr_technicians') || '[]');
-      const tech = techs.find((t: any) => t.username === username && t.password === password);
-      if (tech) {
-        setIsAuthenticated(true);
-        setUser(tech.name);
-        localStorage.setItem('sr_auth', 'true');
-        localStorage.setItem('sr_user', tech.name);
-        return true;
-      }
-    } catch {}
+
+    // Check technicians table
+    const { data: tech } = await supabase
+      .from('technicians')
+      .select('*')
+      .eq('username', username)
+      .eq('password', password)
+      .maybeSingle();
+
+    if (tech) {
+      setIsAuthenticated(true);
+      setUser(tech.name);
+      localStorage.setItem('sr_auth', 'true');
+      localStorage.setItem('sr_user', tech.name);
+      return true;
+    }
+
     return false;
   };
 

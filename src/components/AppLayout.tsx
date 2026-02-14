@@ -9,7 +9,7 @@ import logo from '@/assets/logo.png';
 import logoItDigital from '@/assets/logo-itdigital.png';
 import { loadTickets } from '@/pages/ClientRequest';
 import { useOrders } from '@/contexts/OrderContext';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 
 const AppLayout = () => {
   const { isAuthenticated, user, logout } = useAuth();
@@ -22,7 +22,15 @@ const AppLayout = () => {
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   };
 
-  const pendingTicketsList = useMemo(() => loadTickets().filter(t => t.status === 'pending'), []);
+  const [pendingTicketsList, setPendingTicketsList] = useState<any[]>([]);
+  const [bellRead, setBellRead] = useState(false);
+
+  useEffect(() => {
+    loadTickets().then(tickets => {
+      setPendingTicketsList(tickets.filter(t => t.status === 'pending'));
+    });
+  }, []);
+
   const recentOrdersList = useMemo(() => orders.filter(o => {
     const created = new Date(o.createdAt).getTime();
     return Date.now() - created < 24 * 60 * 60 * 1000 && o.status === 'open';
@@ -30,7 +38,6 @@ const AppLayout = () => {
 
   const notificationCount = pendingTicketsList.length + recentOrdersList.length;
   const pendingTickets = pendingTicketsList.length;
-  const [bellRead, setBellRead] = useState(false);
 
   if (!isAuthenticated) return <Navigate to="/login" replace />;
 

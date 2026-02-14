@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { ClientTicket, loadTickets, saveTickets } from './ClientRequest';
+import { useState, useEffect, useCallback } from 'react';
+import { ClientTicket } from './ClientRequest';
 import { useOrders } from '@/contexts/OrderContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { CheckCircle2, XCircle, Clock, Eye, Phone, MapPin } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 const STATUS_LABELS: Record<ClientTicket['status'], string> = {
   pending: 'Pendente',
@@ -30,19 +31,37 @@ const TicketsGrid = () => {
   const { addOrder } = useOrders();
   const { toast } = useToast();
 
-  useEffect(() => {
-    setTickets(loadTickets());
+  const fetchTickets = useCallback(async () => {
+    const { data } = await supabase
+      .from('client_tickets')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (data) {
+      setTickets(data.map((row: any) => ({
+        id: row.id,
+        name: row.name,
+        whatsapp: row.whatsapp,
+        location: row.location,
+        latitude: row.latitude,
+        longitude: row.longitude,
+        description: row.description,
+        photos: row.photos || [],
+        status: row.status,
+        createdAt: row.created_at,
+        linkedOrderId: row.linked_order_id,
+      })));
+    }
   }, []);
 
-  const updateTicketStatus = (ticketId: string, status: ClientTicket['status']) => {
-    const updated = tickets.map(t => t.id === ticketId ? { ...t, status } : t);
-    setTickets(updated);
-    saveTickets(updated);
+  useEffect(() => {
+    fetchTickets();
+  }, [fetchTickets]);
 
+  const updateTicketStatus = async (ticketId: string, status: ClientTicket['status']) => {
     const ticket = tickets.find(t => t.id === ticketId);
+
     if (status === 'accepted' && ticket) {
-      // Create an order from the ticket
-      const order = addOrder({
+      const order = await addOrder({
         clientName: ticket.name,
         clientPhone: ticket.whatsapp,
         clientEmail: '',
@@ -57,12 +76,15 @@ const TicketsGrid = () => {
         assignedTechnician: '',
       });
 
-      // Link order to ticket
-      const withLink = updated.map(t => t.id === ticketId ? { ...t, status: 'accepted' as const, linkedOrderId: order.id } : t);
-      setTickets(withLink);
-      saveTickets(withLink);
+      // Update ticket in DB
+      await supabase
+        .from('client_tickets')
+        .update({ status: 'accepted', linked_order_id: order.id })
+        .eq('id', ticketId);
 
-      // Open WhatsApp to notify client
+      // Refresh tickets
+      fetchTickets();
+
       const phone = ticket.whatsapp.replace(/\D/g, '');
       const fullPhone = phone.startsWith('55') ? phone : `55${phone}`;
       const msg = encodeURIComponent(
@@ -72,6 +94,12 @@ const TicketsGrid = () => {
 
       toast({ title: `Chamado aceito! OS #${order.id} criada.` });
     } else if (status === 'rejected' && ticket) {
+      await supabase
+        .from('client_tickets')
+        .update({ status: 'rejected' })
+        .eq('id', ticketId);
+      fetchTickets();
+
       const phone = ticket.whatsapp.replace(/\D/g, '');
       const fullPhone = phone.startsWith('55') ? phone : `55${phone}`;
       const msg = encodeURIComponent(
@@ -80,6 +108,11 @@ const TicketsGrid = () => {
       window.open(`https://wa.me/${fullPhone}?text=${msg}`, '_blank');
       toast({ title: 'Chamado rejeitado.' });
     } else {
+      await supabase
+        .from('client_tickets')
+        .update({ status })
+        .eq('id', ticketId);
+      fetchTickets();
       toast({ title: `Status atualizado para ${STATUS_LABELS[status]}` });
     }
   };
