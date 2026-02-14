@@ -221,18 +221,13 @@ const AppLayout = () => {
                     </button>
                   </Link>
                   <Link to="/technicians" className="hidden sm:block">
-                    <button className="p-2 rounded-lg hover:bg-white/10 transition-colors">
-                      <BookOpen className="h-5 w-5" />
+                    <button className="p-2 rounded-lg hover:bg-white/10 transition-colors" title="Equipe Técnica">
+                      <Users className="h-5 w-5" />
                     </button>
                   </Link>
                   <Link to="/reports" className="hidden sm:block">
-                    <button className="p-2 rounded-lg hover:bg-white/10 transition-colors">
-                      <BarChart3 className="h-5 w-5" />
-                    </button>
-                  </Link>
-                  <Link to="/technicians" className="hidden sm:block">
-                    <button className="p-2 rounded-lg hover:bg-white/10 transition-colors">
-                      <Users className="h-5 w-5" />
+                    <button className="p-2 rounded-lg hover:bg-white/10 transition-colors" title="Relatórios">
+                      <BookOpen className="h-5 w-5" />
                     </button>
                   </Link>
                   <Link to="/orders/new" className="hidden sm:block">
