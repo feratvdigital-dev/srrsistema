@@ -215,6 +215,11 @@ const AppLayout = () => {
                   </Popover>
 
                   {/* Desktop-only icons */}
+                  <Link to="/expenses" className="hidden sm:block">
+                    <button className="p-2 rounded-lg hover:bg-white/10 transition-colors" title="Despesas">
+                      <DollarSign className="h-5 w-5" />
+                    </button>
+                  </Link>
                   <Link to="/technicians" className="hidden sm:block">
                     <button className="p-2 rounded-lg hover:bg-white/10 transition-colors">
                       <BookOpen className="h-5 w-5" />
