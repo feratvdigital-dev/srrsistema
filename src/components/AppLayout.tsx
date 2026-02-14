@@ -7,9 +7,9 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import logo from '@/assets/logo.png';
 import logoItDigital from '@/assets/logo-itdigital.png';
-import { loadTickets } from '@/pages/ClientRequest';
 import { useOrders } from '@/contexts/OrderContext';
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState } from 'react';
+import { useTicketNotifications } from '@/hooks/useTicketNotifications';
 
 const AppLayout = () => {
   const { isAuthenticated, user, logout } = useAuth();
@@ -22,14 +22,8 @@ const AppLayout = () => {
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   };
 
-  const [pendingTicketsList, setPendingTicketsList] = useState<any[]>([]);
+  const { pendingTickets: pendingTicketsList } = useTicketNotifications();
   const [bellRead, setBellRead] = useState(false);
-
-  useEffect(() => {
-    loadTickets().then(tickets => {
-      setPendingTicketsList(tickets.filter(t => t.status === 'pending'));
-    });
-  }, []);
 
   const recentOrdersList = useMemo(() => orders.filter(o => {
     const created = new Date(o.createdAt).getTime();
