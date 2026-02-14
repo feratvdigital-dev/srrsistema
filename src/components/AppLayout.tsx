@@ -9,7 +9,7 @@ import logo from '@/assets/logo.png';
 import logoItDigital from '@/assets/logo-itdigital.png';
 import { loadTickets } from '@/pages/ClientRequest';
 import { useOrders } from '@/contexts/OrderContext';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 
 const AppLayout = () => {
   const { isAuthenticated, user, logout } = useAuth();
@@ -30,6 +30,7 @@ const AppLayout = () => {
 
   const notificationCount = pendingTicketsList.length + recentOrdersList.length;
   const pendingTickets = pendingTicketsList.length;
+  const [bellRead, setBellRead] = useState(false);
 
   if (!isAuthenticated) return <Navigate to="/login" replace />;
 
@@ -86,11 +87,11 @@ const AppLayout = () => {
                       <MapPin className="h-4 w-4 sm:h-5 sm:w-5" />
                     </button>
                   </Link>
-                  <Popover>
+                  <Popover onOpenChange={(open) => { if (open) setBellRead(true); }}>
                     <PopoverTrigger asChild>
                       <button className="p-1.5 sm:p-2 rounded-lg hover:bg-white/10 transition-colors relative" title="Notificações">
                         <Bell className="h-4 w-4 sm:h-5 sm:w-5" />
-                        {notificationCount > 0 && (
+                        {notificationCount > 0 && !bellRead && (
                           <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full h-4 w-4 flex items-center justify-center animate-pulse">
                             {notificationCount > 9 ? '9+' : notificationCount}
                           </span>
