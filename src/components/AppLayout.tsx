@@ -177,8 +177,18 @@ const AppLayout = () => {
                       </button>
                     </PopoverTrigger>
                     <PopoverContent align="end" className="w-72 p-0">
-                      <div className="px-4 py-3 border-b">
+                      <div className="px-4 py-3 border-b flex items-center justify-between">
                         <p className="text-sm font-bold">Notificações</p>
+                        {notificationCount > 0 && !bellRead && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-xs h-7 px-2 text-primary hover:text-primary"
+                            onClick={() => setBellRead(true)}
+                          >
+                            Marcar como lidas
+                          </Button>
+                        )}
                       </div>
                       <div className="max-h-64 overflow-y-auto">
                         {notificationCount === 0 ? (
