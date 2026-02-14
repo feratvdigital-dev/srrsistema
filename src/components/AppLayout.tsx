@@ -134,7 +134,7 @@ const AppLayout = () => {
               )}
 
               {showBack && (
-                <button onClick={() => navigate(-1)} className="p-1 hover:opacity-80 shrink-0">
+                <button onClick={() => navigate('/dashboard')} className="p-1 hover:opacity-80 shrink-0">
                   <ArrowLeft className="h-5 w-5" />
                 </button>
               )}
