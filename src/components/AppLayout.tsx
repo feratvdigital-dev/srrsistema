@@ -1,6 +1,6 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { Navigate, Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { Bell, BookOpen, BarChart3, Users, Plus, ArrowLeft, LogOut, Inbox, MapPin, Menu } from 'lucide-react';
+import { Bell, BookOpen, BarChart3, Users, Plus, ArrowLeft, LogOut, Inbox, MapPin, Menu, DollarSign } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -17,6 +17,7 @@ const menuItems = [
   { to: '/tickets', label: 'Chamados', icon: Inbox },
   { to: '/orders/new', label: 'Nova OS', icon: Plus },
   { to: '/technicians', label: 'Equipe Técnica', icon: Users },
+  { to: '/expenses', label: 'Despesas', icon: DollarSign },
   { to: '/reports', label: 'Relatórios', icon: BookOpen },
   { to: '/map', label: 'Mapa de OS', icon: MapPin },
 ];

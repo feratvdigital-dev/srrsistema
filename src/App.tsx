@@ -12,6 +12,7 @@ import NewOrder from "./pages/NewOrder";
 import OrderDetail from "./pages/OrderDetail";
 import Technicians from "./pages/Technicians";
 import Reports from "./pages/Reports";
+import Expenses from "./pages/Expenses";
 import ClientRequest from "./pages/ClientRequest";
 import TicketsGrid from "./pages/TicketsGrid";
 import OrdersMap from "./pages/OrdersMap";
@@ -40,6 +41,7 @@ const App = () => (
                   <Route path="/orders/new" element={<NewOrder />} />
                   <Route path="/orders/:id" element={<OrderDetail />} />
                   <Route path="/technicians" element={<Technicians />} />
+                  <Route path="/expenses" element={<Expenses />} />
                   <Route path="/reports" element={<Reports />} />
                   <Route path="/tickets" element={<TicketsGrid />} />
                   <Route path="/map" element={<OrdersMap />} />
