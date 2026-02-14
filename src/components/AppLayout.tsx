@@ -4,6 +4,7 @@ import { Bell, BookOpen, BarChart3, Users, Plus, ArrowLeft, LogOut, Inbox, MapPi
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import logo from '@/assets/logo.png';
 import logoItDigital from '@/assets/logo-itdigital.png';
 import { loadTickets } from '@/pages/ClientRequest';
@@ -21,18 +22,14 @@ const AppLayout = () => {
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   };
 
-  // Notification count: pending tickets + recent orders (created in last 24h)
-  const notificationCount = useMemo(() => {
-    const pendingTickets = loadTickets().filter(t => t.status === 'pending').length;
-    const recentOrders = orders.filter(o => {
-      const created = new Date(o.createdAt).getTime();
-      const now = Date.now();
-      return now - created < 24 * 60 * 60 * 1000 && o.status === 'open';
-    }).length;
-    return pendingTickets + recentOrders;
-  }, [orders]);
+  const pendingTicketsList = useMemo(() => loadTickets().filter(t => t.status === 'pending'), []);
+  const recentOrdersList = useMemo(() => orders.filter(o => {
+    const created = new Date(o.createdAt).getTime();
+    return Date.now() - created < 24 * 60 * 60 * 1000 && o.status === 'open';
+  }), [orders]);
 
-  const pendingTickets = loadTickets().filter(t => t.status === 'pending').length;
+  const notificationCount = pendingTicketsList.length + recentOrdersList.length;
+  const pendingTickets = pendingTicketsList.length;
 
   if (!isAuthenticated) return <Navigate to="/login" replace />;
 
@@ -89,16 +86,43 @@ const AppLayout = () => {
                       <MapPin className="h-4 w-4 sm:h-5 sm:w-5" />
                     </button>
                   </Link>
-                  <Link to="/tickets">
-                    <button className="p-1.5 sm:p-2 rounded-lg hover:bg-white/10 transition-colors relative" title="Notificações">
-                      <Bell className="h-4 w-4 sm:h-5 sm:w-5" />
-                      {notificationCount > 0 && (
-                        <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full h-4 w-4 flex items-center justify-center animate-pulse">
-                          {notificationCount > 9 ? '9+' : notificationCount}
-                        </span>
-                      )}
-                    </button>
-                  </Link>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <button className="p-1.5 sm:p-2 rounded-lg hover:bg-white/10 transition-colors relative" title="Notificações">
+                        <Bell className="h-4 w-4 sm:h-5 sm:w-5" />
+                        {notificationCount > 0 && (
+                          <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full h-4 w-4 flex items-center justify-center animate-pulse">
+                            {notificationCount > 9 ? '9+' : notificationCount}
+                          </span>
+                        )}
+                      </button>
+                    </PopoverTrigger>
+                    <PopoverContent align="end" className="w-72 p-0">
+                      <div className="px-4 py-3 border-b">
+                        <p className="text-sm font-bold">Notificações</p>
+                      </div>
+                      <div className="max-h-64 overflow-y-auto">
+                        {notificationCount === 0 ? (
+                          <p className="text-sm text-muted-foreground text-center py-6">Nenhuma notificação</p>
+                        ) : (
+                          <div className="divide-y">
+                            {pendingTicketsList.map(t => (
+                              <Link key={t.id} to="/tickets" className="block px-4 py-3 hover:bg-muted/50 transition-colors">
+                                <p className="text-sm font-medium">📩 Novo chamado {t.id}</p>
+                                <p className="text-xs text-muted-foreground">{t.name} — {t.description.substring(0, 40)}{t.description.length > 40 ? '...' : ''}</p>
+                              </Link>
+                            ))}
+                            {recentOrdersList.map(o => (
+                              <Link key={o.id} to={`/orders/${o.id}`} className="block px-4 py-3 hover:bg-muted/50 transition-colors">
+                                <p className="text-sm font-medium">🔧 Nova OS #{o.id}</p>
+                                <p className="text-xs text-muted-foreground">{o.clientName} — {o.address?.substring(0, 40)}</p>
+                              </Link>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </PopoverContent>
+                  </Popover>
                   <Link to="/technicians">
                     <button className="p-1.5 sm:p-2 rounded-lg hover:bg-white/10 transition-colors">
                       <BookOpen className="h-4 w-4 sm:h-5 sm:w-5" />
