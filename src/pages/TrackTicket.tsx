@@ -5,9 +5,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Search, Clock, CheckCircle2, XCircle, Loader2, AlertCircle } from 'lucide-react';
-import { loadTickets, ClientTicket } from './ClientRequest';
+import { ClientTicket } from './ClientRequest';
 import logo from '@/assets/logo.png';
 import logoItDigital from '@/assets/logo-itdigital.png';
+import { supabase } from '@/integrations/supabase/client';
 
 const STATUS_CONFIG: Record<ClientTicket['status'], { label: string; color: string; icon: typeof Clock }> = {
   pending: { label: 'Pendente', color: 'bg-yellow-100 text-yellow-700', icon: Clock },
@@ -18,6 +19,20 @@ const STATUS_CONFIG: Record<ClientTicket['status'], { label: string; color: stri
 };
 
 const STEPS = ['pending', 'accepted', 'in_progress', 'completed'] as const;
+
+const mapRow = (row: any): ClientTicket => ({
+  id: row.id,
+  name: row.name,
+  whatsapp: row.whatsapp,
+  location: row.location,
+  latitude: row.latitude,
+  longitude: row.longitude,
+  description: row.description,
+  photos: row.photos || [],
+  status: row.status,
+  createdAt: row.created_at,
+  linkedOrderId: row.linked_order_id,
+});
 
 const TrackTicket = () => {
   const [searchParams] = useSearchParams();
@@ -36,41 +51,51 @@ const TrackTicket = () => {
 
   const normalizePhone = (phone: string) => phone.replace(/\D/g, '');
 
-  const searchByWhatsapp = (whatsapp: string) => {
-    const allTickets = loadTickets();
+  const searchByWhatsapp = async (whatsapp: string) => {
     const normalized = normalizePhone(whatsapp);
-    const found = allTickets.filter(t => normalizePhone(t.whatsapp) === normalized);
-    if (found.length > 0) {
-      setTickets(found);
-      setSelectedTicket(null);
-      setNotFound(false);
-    } else {
-      setTickets([]);
-      setSelectedTicket(null);
-      setNotFound(true);
+    const { data } = await supabase
+      .from('client_tickets')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (data) {
+      const found = data.filter((row: any) => normalizePhone(row.whatsapp) === normalized).map(mapRow);
+      if (found.length > 0) {
+        setTickets(found);
+        setSelectedTicket(null);
+        setNotFound(false);
+      } else {
+        setTickets([]);
+        setSelectedTicket(null);
+        setNotFound(true);
+      }
     }
   };
 
-  const handleSearch = (e: React.FormEvent) => {
+  const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     const trimmed = searchValue.trim();
     if (!trimmed) return;
 
-    const allTickets = loadTickets();
-
     // Check if it looks like a ticket ID
     if (trimmed.toUpperCase().startsWith('T')) {
-      const found = allTickets.find(t => t.id.toLowerCase() === trimmed.toLowerCase());
-      if (found) {
-        setTickets([found]);
-        setSelectedTicket(found);
+      const { data } = await supabase
+        .from('client_tickets')
+        .select('*')
+        .ilike('id', trimmed)
+        .maybeSingle();
+
+      if (data) {
+        const ticket = mapRow(data);
+        setTickets([ticket]);
+        setSelectedTicket(ticket);
         setNotFound(false);
         return;
       }
     }
 
     // Otherwise search by WhatsApp
-    searchByWhatsapp(trimmed);
+    await searchByWhatsapp(trimmed);
   };
 
   const getStepIndex = (status: ClientTicket['status']) => {
@@ -131,7 +156,6 @@ const TrackTicket = () => {
           </Card>
         )}
 
-        {/* List of tickets found by WhatsApp */}
         {tickets.length > 0 && !selectedTicket && (
           <div className="mt-4 space-y-3">
             <p className="text-sm font-bold text-muted-foreground">{tickets.length} chamado(s) encontrado(s)</p>
@@ -153,7 +177,6 @@ const TrackTicket = () => {
           </div>
         )}
 
-        {/* Ticket detail */}
         {ticketToShow && (
           <div className="mt-6 space-y-4">
             {tickets.length > 1 && (

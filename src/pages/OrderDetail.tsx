@@ -65,15 +65,15 @@ const OrderDetail = () => {
         reader.readAsDataURL(file);
       })
     );
-    Promise.all(readers).then(results => {
+    Promise.all(readers).then(async results => {
       const updated = { ...order.photos, [phase]: [...order.photos[phase], ...results] };
-      updateOrder(order.id, { photos: updated });
+      await updateOrder(order.id, { photos: updated });
       toast({ title: 'Foto(s) adicionada(s)!' });
     });
   };
 
-  const handleSave = () => {
-    updateOrder(order.id, {
+  const handleSave = async () => {
+    await updateOrder(order.id, {
       observation,
       laborCost: parseFloat(laborCost) || 0,
       materialCost: parseFloat(materialCost) || 0,
@@ -83,7 +83,7 @@ const OrderDetail = () => {
     toast({ title: 'Alterações salvas!' });
   };
 
-  const handleStatusChange = (status: OrderStatus) => {
+  const handleStatusChange = async (status: OrderStatus) => {
     const updates: Partial<typeof order> = {
       status,
       observation,
@@ -96,7 +96,7 @@ const OrderDetail = () => {
     if (status === 'closed') {
       updates.closedAt = new Date().toISOString();
     }
-    updateOrder(order.id, updates);
+    await updateOrder(order.id, updates);
     toast({ title: `OS #${order.id} - ${STATUS_LABELS[status]}` });
     if (status === 'closed') generatePDF({ ...order, ...updates } as typeof order);
   };
@@ -341,9 +341,9 @@ const OrderDetail = () => {
           {/* Delete button */}
           <Button
             variant="outline"
-            onClick={() => {
+            onClick={async () => {
               if (window.confirm(`Tem certeza que deseja excluir a OS #${order.id}?`)) {
-                deleteOrder(order.id);
+                await deleteOrder(order.id);
                 toast({ title: `OS #${order.id} excluída com sucesso` });
                 navigate('/dashboard');
               }

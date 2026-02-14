@@ -14,7 +14,200 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      app_users: {
+        Row: {
+          created_at: string
+          id: string
+          password: string
+          role: string
+          username: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          password: string
+          role?: string
+          username: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          password?: string
+          role?: string
+          username?: string
+        }
+        Relationships: []
+      }
+      client_tickets: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          latitude: number | null
+          linked_order_id: number | null
+          location: string
+          longitude: number | null
+          name: string
+          photos: string[] | null
+          status: string
+          whatsapp: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string
+          id: string
+          latitude?: number | null
+          linked_order_id?: number | null
+          location?: string
+          longitude?: number | null
+          name: string
+          photos?: string[] | null
+          status?: string
+          whatsapp: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          latitude?: number | null
+          linked_order_id?: number | null
+          location?: string
+          longitude?: number | null
+          name?: string
+          photos?: string[] | null
+          status?: string
+          whatsapp?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_tickets_linked_order_id_fkey"
+            columns: ["linked_order_id"]
+            isOneToOne: false
+            referencedRelation: "service_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      service_orders: {
+        Row: {
+          address: string
+          assigned_technician: string
+          client_email: string
+          client_name: string
+          client_phone: string
+          closed_at: string | null
+          created_at: string
+          description: string
+          executed_at: string | null
+          id: number
+          labor_cost: number
+          latitude: number | null
+          longitude: number | null
+          material_cost: number
+          material_description: string
+          observation: string
+          photos_after: string[] | null
+          photos_before: string[] | null
+          photos_during: string[] | null
+          service_type: string
+          status: string
+        }
+        Insert: {
+          address?: string
+          assigned_technician?: string
+          client_email?: string
+          client_name: string
+          client_phone?: string
+          closed_at?: string | null
+          created_at?: string
+          description?: string
+          executed_at?: string | null
+          id?: number
+          labor_cost?: number
+          latitude?: number | null
+          longitude?: number | null
+          material_cost?: number
+          material_description?: string
+          observation?: string
+          photos_after?: string[] | null
+          photos_before?: string[] | null
+          photos_during?: string[] | null
+          service_type?: string
+          status?: string
+        }
+        Update: {
+          address?: string
+          assigned_technician?: string
+          client_email?: string
+          client_name?: string
+          client_phone?: string
+          closed_at?: string | null
+          created_at?: string
+          description?: string
+          executed_at?: string | null
+          id?: number
+          labor_cost?: number
+          latitude?: number | null
+          longitude?: number | null
+          material_cost?: number
+          material_description?: string
+          observation?: string
+          photos_after?: string[] | null
+          photos_before?: string[] | null
+          photos_during?: string[] | null
+          service_type?: string
+          status?: string
+        }
+        Relationships: []
+      }
+      technicians: {
+        Row: {
+          cpf: string | null
+          created_at: string
+          document_photo: string | null
+          email: string
+          id: string
+          name: string
+          password: string | null
+          phone: string
+          profile_photo: string | null
+          rg: string | null
+          specialty: string
+          status: string
+          username: string | null
+        }
+        Insert: {
+          cpf?: string | null
+          created_at?: string
+          document_photo?: string | null
+          email?: string
+          id?: string
+          name: string
+          password?: string | null
+          phone?: string
+          profile_photo?: string | null
+          rg?: string | null
+          specialty?: string
+          status?: string
+          username?: string | null
+        }
+        Update: {
+          cpf?: string | null
+          created_at?: string
+          document_photo?: string | null
+          email?: string
+          id?: string
+          name?: string
+          password?: string | null
+          phone?: string
+          profile_photo?: string | null
+          rg?: string | null
+          specialty?: string
+          status?: string
+          username?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

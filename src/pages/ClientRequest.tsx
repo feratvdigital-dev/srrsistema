@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Camera, CheckCircle2, Search, Send } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import logo from '@/assets/logo.png';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface ClientTicket {
   id: string;
@@ -22,16 +23,25 @@ export interface ClientTicket {
   linkedOrderId?: number;
 }
 
-const TICKETS_KEY = 'sr_client_tickets';
-
-export const loadTickets = (): ClientTicket[] => {
-  try {
-    return JSON.parse(localStorage.getItem(TICKETS_KEY) || '[]');
-  } catch { return []; }
-};
-
-export const saveTickets = (tickets: ClientTicket[]) => {
-  localStorage.setItem(TICKETS_KEY, JSON.stringify(tickets));
+export const loadTickets = async (): Promise<ClientTicket[]> => {
+  const { data } = await supabase
+    .from('client_tickets')
+    .select('*')
+    .order('created_at', { ascending: false });
+  if (!data) return [];
+  return data.map((row: any) => ({
+    id: row.id,
+    name: row.name,
+    whatsapp: row.whatsapp,
+    location: row.location,
+    latitude: row.latitude,
+    longitude: row.longitude,
+    description: row.description,
+    photos: row.photos || [],
+    status: row.status,
+    createdAt: row.created_at,
+    linkedOrderId: row.linked_order_id,
+  }));
 };
 
 const ClientRequest = () => {
@@ -43,7 +53,6 @@ const ClientRequest = () => {
   const [photos, setPhotos] = useState<string[]>([]);
   const [submitted, setSubmitted] = useState(false);
   const [ticketId, setTicketId] = useState('');
-
 
   const handlePhotos = (files: FileList | null) => {
     if (!files) return;
@@ -57,18 +66,24 @@ const ClientRequest = () => {
     Promise.all(readers).then(results => setPhotos(prev => [...prev, ...results]));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const ticket: ClientTicket = {
-      id: `T${Date.now()}`,
-      name, whatsapp, location,
-      description, photos, status: 'pending',
-      createdAt: new Date().toISOString(),
-    };
-    const tickets = loadTickets();
-    tickets.push(ticket);
-    saveTickets(tickets);
-    setTicketId(ticket.id);
+    const id = `T${Date.now()}`;
+    const { error } = await supabase
+      .from('client_tickets')
+      .insert({
+        id,
+        name,
+        whatsapp,
+        location,
+        description,
+        photos,
+      });
+    if (error) {
+      toast({ title: 'Erro ao enviar chamado', variant: 'destructive' });
+      return;
+    }
+    setTicketId(id);
     setSubmitted(true);
     toast({ title: 'Chamado enviado com sucesso!' });
   };

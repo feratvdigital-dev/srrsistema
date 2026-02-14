@@ -65,9 +65,9 @@ const NewOrder = () => {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const order = addOrder({
+    const order = await addOrder({
       clientName,
       clientPhone,
       clientEmail,
