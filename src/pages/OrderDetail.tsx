@@ -50,6 +50,7 @@ const OrderDetail = () => {
   const [visitCost, setVisitCost] = useState('');
   const [showRejectForm, setShowRejectForm] = useState(false);
   const [uploadingPhase, setUploadingPhase] = useState<string | null>(null);
+  const [editingClosed, setEditingClosed] = useState(false);
 
   // No refs needed - using label approach for better mobile compatibility
 
@@ -110,7 +111,7 @@ const OrderDetail = () => {
   const StatusIcon = config.icon;
   const SvcIcon = serviceTypeIcons[order.serviceType];
   const isClosed = order.status === 'closed';
-  const isEditable = !isClosed;
+  const isEditable = !isClosed || editingClosed;
 
   const photoSections = [
     { key: 'before' as const, label: 'ANTES', emoji: '📷' },
@@ -380,7 +381,21 @@ const OrderDetail = () => {
           )}
           {isClosed && (
             <>
-              <Button onClick={() => generatePDF(order)} className="w-full h-12 bg-success hover:bg-success/90 text-success-foreground gap-2 font-semibold">
+              {!editingClosed ? (
+                <Button onClick={() => setEditingClosed(true)} variant="outline" className="w-full h-12 gap-2 font-semibold">
+                  <PenTool className="h-5 w-5" /> Editar OS
+                </Button>
+              ) : (
+                <>
+                  <Button onClick={async () => { await handleSave(); setEditingClosed(false); toast({ title: 'OS atualizada!' }); }} className="w-full h-12 bg-secondary hover:bg-secondary/90 text-secondary-foreground gap-2 font-semibold">
+                    <Save className="h-5 w-5" /> Salvar Alterações
+                  </Button>
+                  <Button variant="ghost" className="w-full" onClick={() => setEditingClosed(false)}>
+                    Cancelar Edição
+                  </Button>
+                </>
+              )}
+              <Button onClick={() => generatePDF(order)} className="w-full h-12 bg-green-600 hover:bg-green-700 text-white gap-2 font-semibold">
                 <Download className="h-5 w-5" /> Ver Relatório PDF
               </Button>
               {order.clientEmail && (
