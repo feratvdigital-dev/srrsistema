@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useOrders } from '@/contexts/OrderContext';
 import { useTechnicians } from '@/contexts/TechnicianContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -46,7 +47,17 @@ const OrderDetail = () => {
   const [laborCost, setLaborCost] = useState(order?.laborCost?.toString() || '');
   const [materialCost, setMaterialCost] = useState(order?.materialCost?.toString() || '');
   const [materialDescription, setMaterialDescription] = useState(order?.materialDescription || '');
-  const [assignedTechnician, setAssignedTechnician] = useState(order?.assignedTechnician || '');
+  const [selectedTechnicians, setSelectedTechnicians] = useState<string[]>(
+    order?.assignedTechnician ? order.assignedTechnician.split(', ').filter(Boolean) : []
+  );
+
+  const toggleTechnician = (name: string) => {
+    setSelectedTechnicians(prev =>
+      prev.includes(name) ? prev.filter(n => n !== name) : [...prev, name]
+    );
+  };
+
+  const assignedTechnician = selectedTechnicians.join(', ');
   const [address, setAddress] = useState(order?.address || '');
   const [visitCost, setVisitCost] = useState('');
   const [showRejectForm, setShowRejectForm] = useState(false);
@@ -196,21 +207,29 @@ const OrderDetail = () => {
         <Card className="border-0 shadow-sm">
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
-              <User className="h-4 w-4" /> Técnico Responsável
+              <User className="h-4 w-4" /> Técnico(s) Responsável(is)
             </CardTitle>
           </CardHeader>
           <CardContent>
             {isEditable ? (
-              <Select value={assignedTechnician} onValueChange={setAssignedTechnician}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecionar técnico" />
-                </SelectTrigger>
-                <SelectContent>
-                  {technicians.map(t => (
-                    <SelectItem key={t.id} value={t.name}>{t.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="space-y-3">
+                {technicians.map(t => (
+                  <label key={t.id} className="flex items-center gap-3 p-3 rounded-lg border cursor-pointer hover:bg-muted/50 transition-colors">
+                    <Checkbox
+                      checked={selectedTechnicians.includes(t.name)}
+                      onCheckedChange={() => toggleTechnician(t.name)}
+                    />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium">{t.name}</p>
+                    </div>
+                  </label>
+                ))}
+                {selectedTechnicians.length > 0 && (
+                  <p className="text-xs text-muted-foreground">
+                    {selectedTechnicians.length} técnico(s): {selectedTechnicians.join(', ')}
+                  </p>
+                )}
+              </div>
             ) : (
               <p className="font-medium">{order.assignedTechnician || '-'}</p>
             )}

@@ -5,10 +5,11 @@ import { useTechnicians } from '@/contexts/TechnicianContext';
 import { ServiceType } from '@/types/serviceOrder';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Droplets, Zap, Wrench, MapPin, CheckCircle2, Navigation, User } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -30,10 +31,16 @@ const NewOrder = () => {
   const [clientEmail, setClientEmail] = useState('');
   const [address, setAddress] = useState('');
   const [description, setDescription] = useState('');
-  const [assignedTechnician, setAssignedTechnician] = useState('');
+  const [selectedTechnicians, setSelectedTechnicians] = useState<string[]>([]);
   const [latitude, setLatitude] = useState<number | undefined>();
   const [longitude, setLongitude] = useState<number | undefined>();
   const [locationLoading, setLocationLoading] = useState(false);
+
+  const toggleTechnician = (name: string) => {
+    setSelectedTechnicians(prev =>
+      prev.includes(name) ? prev.filter(n => n !== name) : [...prev, name]
+    );
+  };
 
   const getLocation = () => {
     setLocationLoading(true);
@@ -79,7 +86,7 @@ const NewOrder = () => {
       laborCost: 0,
       materialCost: 0,
       materialDescription: '',
-      assignedTechnician,
+      assignedTechnician: selectedTechnicians.join(', '),
       latitude,
       longitude,
     });
@@ -145,23 +152,36 @@ const NewOrder = () => {
         <Card className="border-0 shadow-sm">
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
-              <User className="h-4 w-4" /> Técnico Responsável
+              <User className="h-4 w-4" /> Técnico(s) Responsável(is)
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <Select value={assignedTechnician} onValueChange={setAssignedTechnician}>
-              <SelectTrigger>
-                <SelectValue placeholder="Selecionar técnico" />
-              </SelectTrigger>
-              <SelectContent>
+            {technicians.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Nenhum técnico cadastrado</p>
+            ) : (
+              <div className="space-y-3">
                 {technicians.map(t => (
-                  <SelectItem key={t.id} value={t.name}>{t.name}</SelectItem>
+                  <label key={t.id} className="flex items-center gap-3 p-3 rounded-lg border cursor-pointer hover:bg-muted/50 transition-colors">
+                    <Checkbox
+                      checked={selectedTechnicians.includes(t.name)}
+                      onCheckedChange={() => toggleTechnician(t.name)}
+                    />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium">{t.name}</p>
+                      <p className="text-xs text-muted-foreground">{t.specialty === 'hydraulic' ? 'Hidráulica' : t.specialty === 'electrical' ? 'Elétrica' : 'Ambos'}</p>
+                    </div>
+                    <Badge variant="outline" className={`text-xs ${t.status === 'available' ? 'bg-green-100 text-green-700 border-0' : t.status === 'busy' ? 'bg-yellow-100 text-yellow-700 border-0' : 'bg-gray-100 text-gray-500 border-0'}`}>
+                      {t.status === 'available' ? 'Disponível' : t.status === 'busy' ? 'Ocupado' : 'Offline'}
+                    </Badge>
+                  </label>
                 ))}
-                {technicians.length === 0 && (
-                  <SelectItem value="-" disabled>Nenhum técnico cadastrado</SelectItem>
+                {selectedTechnicians.length > 0 && (
+                  <p className="text-xs text-muted-foreground">
+                    {selectedTechnicians.length} técnico(s) selecionado(s): {selectedTechnicians.join(', ')}
+                  </p>
                 )}
-              </SelectContent>
-            </Select>
+              </div>
+            )}
           </CardContent>
         </Card>
 
