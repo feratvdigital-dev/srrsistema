@@ -7,16 +7,32 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import logo from '@/assets/logo.png';
 import logoItDigital from '@/assets/logo-itdigital.png';
 import { loadTickets } from '@/pages/ClientRequest';
+import { useOrders } from '@/contexts/OrderContext';
+import { useMemo } from 'react';
 
 const AppLayout = () => {
   const { isAuthenticated, user, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+  const { orders } = useOrders();
 
   const getInitials = (name: string | null) => {
     if (!name) return '?';
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   };
+
+  // Notification count: pending tickets + recent orders (created in last 24h)
+  const notificationCount = useMemo(() => {
+    const pendingTickets = loadTickets().filter(t => t.status === 'pending').length;
+    const recentOrders = orders.filter(o => {
+      const created = new Date(o.createdAt).getTime();
+      const now = Date.now();
+      return now - created < 24 * 60 * 60 * 1000 && o.status === 'open';
+    }).length;
+    return pendingTickets + recentOrders;
+  }, [orders]);
+
+  const pendingTickets = loadTickets().filter(t => t.status === 'pending').length;
 
   if (!isAuthenticated) return <Navigate to="/login" replace />;
 
@@ -61,14 +77,11 @@ const AppLayout = () => {
                   <Link to="/tickets">
                     <button className="p-1.5 sm:p-2 rounded-lg hover:bg-white/10 transition-colors relative" title="Chamados">
                       <Inbox className="h-4 w-4 sm:h-5 sm:w-5" />
-                      {(() => {
-                        const pending = loadTickets().filter(t => t.status === 'pending').length;
-                        return pending > 0 ? (
-                          <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full h-4 w-4 flex items-center justify-center">
-                            {pending > 9 ? '9+' : pending}
-                          </span>
-                        ) : null;
-                      })()}
+                      {pendingTickets > 0 && (
+                        <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full h-4 w-4 flex items-center justify-center">
+                          {pendingTickets > 9 ? '9+' : pendingTickets}
+                        </span>
+                      )}
                     </button>
                   </Link>
                   <Link to="/map">
@@ -76,9 +89,16 @@ const AppLayout = () => {
                       <MapPin className="h-4 w-4 sm:h-5 sm:w-5" />
                     </button>
                   </Link>
-                  <button className="p-1.5 sm:p-2 rounded-lg hover:bg-white/10 transition-colors">
-                    <Bell className="h-4 w-4 sm:h-5 sm:w-5" />
-                  </button>
+                  <Link to="/tickets">
+                    <button className="p-1.5 sm:p-2 rounded-lg hover:bg-white/10 transition-colors relative" title="Notificações">
+                      <Bell className="h-4 w-4 sm:h-5 sm:w-5" />
+                      {notificationCount > 0 && (
+                        <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full h-4 w-4 flex items-center justify-center animate-pulse">
+                          {notificationCount > 9 ? '9+' : notificationCount}
+                        </span>
+                      )}
+                    </button>
+                  </Link>
                   <Link to="/technicians">
                     <button className="p-1.5 sm:p-2 rounded-lg hover:bg-white/10 transition-colors">
                       <BookOpen className="h-4 w-4 sm:h-5 sm:w-5" />

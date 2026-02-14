@@ -15,6 +15,7 @@ import Reports from "./pages/Reports";
 import ClientRequest from "./pages/ClientRequest";
 import TicketsGrid from "./pages/TicketsGrid";
 import OrdersMap from "./pages/OrdersMap";
+import TrackTicket from "./pages/TrackTicket";
 import AppLayout from "./components/AppLayout";
 import NotFound from "./pages/NotFound";
 
@@ -32,6 +33,7 @@ const App = () => (
               <Routes>
                 <Route path="/login" element={<Login />} />
                 <Route path="/request" element={<ClientRequest />} />
+                <Route path="/track" element={<TrackTicket />} />
                 <Route path="/" element={<Navigate to="/login" replace />} />
                 <Route element={<AppLayout />}>
                   <Route path="/dashboard" element={<Dashboard />} />

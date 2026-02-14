@@ -81,6 +81,11 @@ const ClientRequest = () => {
             <CheckCircle2 className="h-16 w-16 text-green-500 mx-auto" />
             <h2 className="text-xl font-bold">Chamado Enviado!</h2>
             <p className="text-muted-foreground">Seu chamado <strong>{ticketId}</strong> foi registrado. Você receberá uma mensagem no WhatsApp quando ele for aceito.</p>
+            <div className="bg-muted p-3 rounded-lg">
+              <p className="text-xs text-muted-foreground mb-1">Acompanhe seu chamado em:</p>
+              <a href="/track" className="text-sm font-bold text-primary hover:underline">/track</a>
+              <p className="text-xs text-muted-foreground mt-1">Use o código: <strong>{ticketId}</strong></p>
+            </div>
             <Button onClick={() => { setSubmitted(false); setName(''); setWhatsapp(''); setLocation(''); setDescription(''); setPhotos([]); }} variant="outline" className="w-full">
               Enviar Outro Chamado
             </Button>
