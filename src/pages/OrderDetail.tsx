@@ -12,11 +12,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import {
   Camera, Download, ArrowLeft, MapPin, Clock, ExternalLink,
   Droplets, Zap, Wrench, Circle, Play, CheckCircle2, Lock,
-  Save, Image as ImageIcon, PenTool, User, Trash2
+  Save, Image as ImageIcon, PenTool, User, Trash2, Loader2
 } from 'lucide-react';
 import { STATUS_LABELS, SERVICE_TYPE_LABELS, OrderStatus, ServiceType } from '@/types/serviceOrder';
 import { useToast } from '@/hooks/use-toast';
 import { generatePDF } from '@/utils/pdfGenerator';
+import { uploadPhotosFromFiles } from '@/utils/uploadPhoto';
 
 const serviceTypeIcons: Record<ServiceType, React.ElementType> = {
   hydraulic: Droplets,
@@ -56,20 +57,21 @@ const OrderDetail = () => {
     );
   }
 
-  const handlePhotoUpload = (phase: 'before' | 'during' | 'after', files: FileList | null) => {
+  const [uploadingPhase, setUploadingPhase] = useState<string | null>(null);
+
+  const handlePhotoUpload = async (phase: 'before' | 'during' | 'after', files: FileList | null) => {
     if (!files) return;
-    const readers = Array.from(files).map(file =>
-      new Promise<string>(resolve => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result as string);
-        reader.readAsDataURL(file);
-      })
-    );
-    Promise.all(readers).then(async results => {
-      const updated = { ...order.photos, [phase]: [...order.photos[phase], ...results] };
+    setUploadingPhase(phase);
+    try {
+      const urls = await uploadPhotosFromFiles(files, `orders/${order.id}/${phase}`);
+      const updated = { ...order.photos, [phase]: [...order.photos[phase], ...urls] };
       await updateOrder(order.id, { photos: updated });
       toast({ title: 'Foto(s) adicionada(s)!' });
-    });
+    } catch {
+      toast({ title: 'Erro ao enviar fotos', variant: 'destructive' });
+    } finally {
+      setUploadingPhase(null);
+    }
   };
 
   const handleSave = async () => {
@@ -218,8 +220,8 @@ const OrderDetail = () => {
                         htmlFor={`photo-${key}`}
                         className="w-32 h-32 border-2 border-dashed border-border rounded-xl flex flex-col items-center justify-center gap-2 text-muted-foreground hover:border-primary hover:text-primary transition-colors cursor-pointer"
                       >
-                        <Camera className="h-6 w-6" />
-                        <span className="text-xs">Adicionar</span>
+                        {uploadingPhase === key ? <Loader2 className="h-6 w-6 animate-spin" /> : <Camera className="h-6 w-6" />}
+                        <span className="text-xs">{uploadingPhase === key ? 'Enviando...' : 'Adicionar'}</span>
                       </label>
                       <input
                         id={`photo-${key}`}

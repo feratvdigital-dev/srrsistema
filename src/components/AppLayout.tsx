@@ -1,21 +1,32 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { Navigate, Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { Bell, BookOpen, BarChart3, Users, Plus, ArrowLeft, LogOut, Inbox, MapPin } from 'lucide-react';
+import { Bell, BookOpen, BarChart3, Users, Plus, ArrowLeft, LogOut, Inbox, MapPin, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import logo from '@/assets/logo.png';
 import logoItDigital from '@/assets/logo-itdigital.png';
 import { useOrders } from '@/contexts/OrderContext';
 import { useMemo, useState } from 'react';
 import { useTicketNotifications } from '@/hooks/useTicketNotifications';
 
+const menuItems = [
+  { to: '/dashboard', label: 'Dashboard', icon: BarChart3 },
+  { to: '/tickets', label: 'Chamados', icon: Inbox },
+  { to: '/orders/new', label: 'Nova OS', icon: Plus },
+  { to: '/technicians', label: 'Equipe Técnica', icon: Users },
+  { to: '/reports', label: 'Relatórios', icon: BookOpen },
+  { to: '/map', label: 'Mapa de OS', icon: MapPin },
+];
+
 const AppLayout = () => {
   const { isAuthenticated, user, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const { orders } = useOrders();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const getInitials = (name: string | null) => {
     if (!name) return '?';
@@ -58,6 +69,69 @@ const AppLayout = () => {
         <header className="app-header sticky top-0 z-50 shadow-lg">
           <div className="max-w-7xl mx-auto px-3 sm:px-4 h-14 sm:h-16 flex items-center justify-between">
             <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+              {/* Mobile hamburger menu */}
+              {isDashboard && (
+                <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+                  <SheetTrigger asChild>
+                    <button className="p-1.5 rounded-lg hover:bg-white/10 transition-colors sm:hidden">
+                      <Menu className="h-5 w-5" />
+                    </button>
+                  </SheetTrigger>
+                  <SheetContent side="left" className="w-64 p-0 bg-card">
+                    <div className="p-4 border-b app-header">
+                      <img src={logo} alt="SR Resolve" className="h-8 w-auto" />
+                      <p className="text-xs opacity-70 mt-1">Gestão de Manutenção</p>
+                    </div>
+                    <nav className="flex flex-col py-2">
+                      {menuItems.map(item => {
+                        const isActive = location.pathname === item.to;
+                        return (
+                          <Link
+                            key={item.to}
+                            to={item.to}
+                            onClick={() => setMobileMenuOpen(false)}
+                            className={`flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors ${
+                              isActive
+                                ? 'bg-primary/10 text-primary border-r-2 border-primary'
+                                : 'text-foreground hover:bg-muted'
+                            }`}
+                          >
+                            <item.icon className="h-5 w-5" />
+                            {item.label}
+                            {item.to === '/tickets' && pendingTickets > 0 && (
+                              <span className="ml-auto bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                                {pendingTickets > 9 ? '9+' : pendingTickets}
+                              </span>
+                            )}
+                          </Link>
+                        );
+                      })}
+                    </nav>
+                    <div className="absolute bottom-0 left-0 right-0 p-4 border-t">
+                      <div className="flex items-center gap-3 mb-3">
+                        <Avatar className="h-8 w-8">
+                          <AvatarFallback className="bg-secondary text-secondary-foreground text-xs font-bold">
+                            {getInitials(user)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className="text-sm font-medium">{user}</p>
+                          <p className="text-xs text-muted-foreground">Logado</p>
+                        </div>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full gap-2 text-destructive border-destructive"
+                        onClick={() => { logout(); navigate('/login'); setMobileMenuOpen(false); }}
+                      >
+                        <LogOut className="h-4 w-4" /> Sair da Conta
+                      </Button>
+                    </div>
+                  </SheetContent>
+                </Sheet>
+              )}
+
               {showBack && (
                 <button onClick={() => navigate(-1)} className="p-1 hover:opacity-80 shrink-0">
                   <ArrowLeft className="h-5 w-5" />
@@ -73,9 +147,10 @@ const AppLayout = () => {
             <div className="flex items-center gap-1 sm:gap-2 shrink-0">
               {isDashboard && (
                 <>
-                  <Link to="/tickets">
-                    <button className="p-1.5 sm:p-2 rounded-lg hover:bg-white/10 transition-colors relative" title="Chamados">
-                      <Inbox className="h-4 w-4 sm:h-5 sm:w-5" />
+                  {/* Desktop nav icons - hidden on mobile */}
+                  <Link to="/tickets" className="hidden sm:block">
+                    <button className="p-2 rounded-lg hover:bg-white/10 transition-colors relative" title="Chamados">
+                      <Inbox className="h-5 w-5" />
                       {pendingTickets > 0 && (
                         <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full h-4 w-4 flex items-center justify-center">
                           {pendingTickets > 9 ? '9+' : pendingTickets}
@@ -83,11 +158,13 @@ const AppLayout = () => {
                       )}
                     </button>
                   </Link>
-                  <Link to="/map">
-                    <button className="p-1.5 sm:p-2 rounded-lg hover:bg-white/10 transition-colors" title="Mapa de OS">
-                      <MapPin className="h-4 w-4 sm:h-5 sm:w-5" />
+                  <Link to="/map" className="hidden sm:block">
+                    <button className="p-2 rounded-lg hover:bg-white/10 transition-colors" title="Mapa de OS">
+                      <MapPin className="h-5 w-5" />
                     </button>
                   </Link>
+                  
+                  {/* Bell - always visible */}
                   <Popover onOpenChange={(open) => { if (open) setBellRead(true); }}>
                     <PopoverTrigger asChild>
                       <button className="p-1.5 sm:p-2 rounded-lg hover:bg-white/10 transition-colors relative" title="Notificações">
@@ -125,25 +202,27 @@ const AppLayout = () => {
                       </div>
                     </PopoverContent>
                   </Popover>
-                  <Link to="/technicians">
-                    <button className="p-1.5 sm:p-2 rounded-lg hover:bg-white/10 transition-colors">
-                      <BookOpen className="h-4 w-4 sm:h-5 sm:w-5" />
+
+                  {/* Desktop-only icons */}
+                  <Link to="/technicians" className="hidden sm:block">
+                    <button className="p-2 rounded-lg hover:bg-white/10 transition-colors">
+                      <BookOpen className="h-5 w-5" />
                     </button>
                   </Link>
-                  <Link to="/reports">
-                    <button className="p-1.5 sm:p-2 rounded-lg hover:bg-white/10 transition-colors">
-                      <BarChart3 className="h-4 w-4 sm:h-5 sm:w-5" />
+                  <Link to="/reports" className="hidden sm:block">
+                    <button className="p-2 rounded-lg hover:bg-white/10 transition-colors">
+                      <BarChart3 className="h-5 w-5" />
                     </button>
                   </Link>
-                  <Link to="/technicians">
-                    <button className="p-1.5 sm:p-2 rounded-lg hover:bg-white/10 transition-colors">
-                      <Users className="h-4 w-4 sm:h-5 sm:w-5" />
+                  <Link to="/technicians" className="hidden sm:block">
+                    <button className="p-2 rounded-lg hover:bg-white/10 transition-colors">
+                      <Users className="h-5 w-5" />
                     </button>
                   </Link>
-                  <Link to="/orders/new">
-                    <Button size="sm" className="bg-secondary hover:bg-secondary/90 text-secondary-foreground ml-1 sm:ml-2 gap-1 font-semibold text-xs sm:text-sm h-8 sm:h-9 px-2 sm:px-3">
-                      <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
-                      <span className="hidden sm:inline">Nova OS</span>
+                  <Link to="/orders/new" className="hidden sm:block">
+                    <Button size="sm" className="bg-secondary hover:bg-secondary/90 text-secondary-foreground ml-2 gap-1 font-semibold text-sm h-9 px-3">
+                      <Plus className="h-4 w-4" />
+                      Nova OS
                     </Button>
                   </Link>
                 </>
