@@ -3,6 +3,7 @@ import { Navigate, Outlet, Link, useLocation, useNavigate } from 'react-router-d
 import { Bell, BookOpen, BarChart3, Users, Plus, ArrowLeft, LogOut, Inbox, MapPin, Menu, DollarSign } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -149,21 +150,31 @@ const AppLayout = () => {
               {isDashboard && (
                 <>
                   {/* Desktop nav icons - hidden on mobile */}
-                  <Link to="/tickets" className="hidden sm:block">
-                    <button className="p-2 rounded-lg hover:bg-white/10 transition-colors relative" title="Chamados">
-                      <Inbox className="h-5 w-5" />
-                      {pendingTickets > 0 && (
-                        <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full h-4 w-4 flex items-center justify-center">
-                          {pendingTickets > 9 ? '9+' : pendingTickets}
-                        </span>
-                      )}
-                    </button>
-                  </Link>
-                  <Link to="/map" className="hidden sm:block">
-                    <button className="p-2 rounded-lg hover:bg-white/10 transition-colors" title="Mapa de OS">
-                      <MapPin className="h-5 w-5" />
-                    </button>
-                  </Link>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Link to="/tickets" className="hidden sm:block">
+                        <button className="p-2 rounded-lg hover:bg-white/10 transition-colors relative">
+                          <Inbox className="h-5 w-5" />
+                          {pendingTickets > 0 && (
+                            <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full h-4 w-4 flex items-center justify-center">
+                              {pendingTickets > 9 ? '9+' : pendingTickets}
+                            </span>
+                          )}
+                        </button>
+                      </Link>
+                    </TooltipTrigger>
+                    <TooltipContent>Chamados</TooltipContent>
+                  </Tooltip>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Link to="/map" className="hidden sm:block">
+                        <button className="p-2 rounded-lg hover:bg-white/10 transition-colors">
+                          <MapPin className="h-5 w-5" />
+                        </button>
+                      </Link>
+                    </TooltipTrigger>
+                    <TooltipContent>Mapa de OS</TooltipContent>
+                  </Tooltip>
                   
                   {/* Bell - always visible */}
                   <Popover onOpenChange={(open) => { if (open) setBellRead(true); }}>
@@ -215,21 +226,36 @@ const AppLayout = () => {
                   </Popover>
 
                   {/* Desktop-only icons */}
-                  <Link to="/expenses" className="hidden sm:block">
-                    <button className="p-2 rounded-lg hover:bg-white/10 transition-colors" title="Despesas">
-                      <DollarSign className="h-5 w-5" />
-                    </button>
-                  </Link>
-                  <Link to="/technicians" className="hidden sm:block">
-                    <button className="p-2 rounded-lg hover:bg-white/10 transition-colors" title="Equipe Técnica">
-                      <Users className="h-5 w-5" />
-                    </button>
-                  </Link>
-                  <Link to="/reports" className="hidden sm:block">
-                    <button className="p-2 rounded-lg hover:bg-white/10 transition-colors" title="Relatórios">
-                      <BookOpen className="h-5 w-5" />
-                    </button>
-                  </Link>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Link to="/expenses" className="hidden sm:block">
+                        <button className="p-2 rounded-lg hover:bg-white/10 transition-colors">
+                          <DollarSign className="h-5 w-5" />
+                        </button>
+                      </Link>
+                    </TooltipTrigger>
+                    <TooltipContent>Despesas</TooltipContent>
+                  </Tooltip>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Link to="/technicians" className="hidden sm:block">
+                        <button className="p-2 rounded-lg hover:bg-white/10 transition-colors">
+                          <Users className="h-5 w-5" />
+                        </button>
+                      </Link>
+                    </TooltipTrigger>
+                    <TooltipContent>Equipe Técnica</TooltipContent>
+                  </Tooltip>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Link to="/reports" className="hidden sm:block">
+                        <button className="p-2 rounded-lg hover:bg-white/10 transition-colors">
+                          <BookOpen className="h-5 w-5" />
+                        </button>
+                      </Link>
+                    </TooltipTrigger>
+                    <TooltipContent>Relatórios</TooltipContent>
+                  </Tooltip>
                   <Link to="/orders/new" className="hidden sm:block">
                     <Button size="sm" className="bg-secondary hover:bg-secondary/90 text-secondary-foreground ml-2 gap-1 font-semibold text-sm h-9 px-3">
                       <Plus className="h-4 w-4" />
