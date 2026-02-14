@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,30 +20,65 @@ const STATUS_CONFIG: Record<ClientTicket['status'], { label: string; color: stri
 const STEPS = ['pending', 'accepted', 'in_progress', 'completed'] as const;
 
 const TrackTicket = () => {
-  const [ticketCode, setTicketCode] = useState('');
-  const [ticket, setTicket] = useState<ClientTicket | null>(null);
+  const [searchParams] = useSearchParams();
+  const [searchValue, setSearchValue] = useState('');
+  const [tickets, setTickets] = useState<ClientTicket[]>([]);
+  const [selectedTicket, setSelectedTicket] = useState<ClientTicket | null>(null);
   const [notFound, setNotFound] = useState(false);
+
+  useEffect(() => {
+    const whatsapp = searchParams.get('whatsapp');
+    if (whatsapp) {
+      setSearchValue(whatsapp);
+      searchByWhatsapp(whatsapp);
+    }
+  }, [searchParams]);
+
+  const normalizePhone = (phone: string) => phone.replace(/\D/g, '');
+
+  const searchByWhatsapp = (whatsapp: string) => {
+    const allTickets = loadTickets();
+    const normalized = normalizePhone(whatsapp);
+    const found = allTickets.filter(t => normalizePhone(t.whatsapp) === normalized);
+    if (found.length > 0) {
+      setTickets(found);
+      setSelectedTicket(null);
+      setNotFound(false);
+    } else {
+      setTickets([]);
+      setSelectedTicket(null);
+      setNotFound(true);
+    }
+  };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    const trimmed = ticketCode.trim();
+    const trimmed = searchValue.trim();
     if (!trimmed) return;
 
-    const tickets = loadTickets();
-    const found = tickets.find(t => t.id.toLowerCase() === trimmed.toLowerCase());
-    if (found) {
-      setTicket(found);
-      setNotFound(false);
-    } else {
-      setTicket(null);
-      setNotFound(true);
+    const allTickets = loadTickets();
+
+    // Check if it looks like a ticket ID
+    if (trimmed.toUpperCase().startsWith('T')) {
+      const found = allTickets.find(t => t.id.toLowerCase() === trimmed.toLowerCase());
+      if (found) {
+        setTickets([found]);
+        setSelectedTicket(found);
+        setNotFound(false);
+        return;
+      }
     }
+
+    // Otherwise search by WhatsApp
+    searchByWhatsapp(trimmed);
   };
 
   const getStepIndex = (status: ClientTicket['status']) => {
     if (status === 'rejected') return -1;
     return STEPS.indexOf(status as any);
   };
+
+  const ticketToShow = selectedTicket;
 
   return (
     <div className="min-h-screen bg-background">
@@ -64,15 +100,15 @@ const TrackTicket = () => {
                 <Search className="h-10 w-10 mx-auto text-primary opacity-60" />
                 <h2 className="text-lg font-bold">Consulte seu Chamado</h2>
                 <p className="text-sm text-muted-foreground">
-                  Digite o número do ticket que você recebeu ao enviar seu chamado
+                  Digite seu WhatsApp ou o número do ticket
                 </p>
               </div>
 
               <div className="flex gap-2">
                 <Input
-                  value={ticketCode}
-                  onChange={e => setTicketCode(e.target.value)}
-                  placeholder="Ex: T1234567890123"
+                  value={searchValue}
+                  onChange={e => setSearchValue(e.target.value)}
+                  placeholder="WhatsApp ou código do ticket"
                   className="flex-1"
                 />
                 <Button type="submit" className="bg-primary gap-1">
@@ -87,72 +123,100 @@ const TrackTicket = () => {
           <Card className="border-0 shadow-sm mt-4">
             <CardContent className="p-6 text-center space-y-2">
               <AlertCircle className="h-10 w-10 mx-auto text-destructive opacity-60" />
-              <p className="font-semibold text-destructive">Chamado não encontrado</p>
+              <p className="font-semibold text-destructive">Nenhum chamado encontrado</p>
               <p className="text-sm text-muted-foreground">
-                Verifique o número do ticket e tente novamente.
+                Verifique o número do WhatsApp ou ticket e tente novamente.
               </p>
             </CardContent>
           </Card>
         )}
 
-        {ticket && (
+        {/* List of tickets found by WhatsApp */}
+        {tickets.length > 0 && !selectedTicket && (
+          <div className="mt-4 space-y-3">
+            <p className="text-sm font-bold text-muted-foreground">{tickets.length} chamado(s) encontrado(s)</p>
+            {tickets.map(t => (
+              <Card key={t.id} className="border-0 shadow-sm cursor-pointer hover:shadow-md transition-shadow" onClick={() => setSelectedTicket(t)}>
+                <CardContent className="p-4 flex items-center justify-between">
+                  <div>
+                    <p className="font-bold text-sm">{t.id}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {new Date(t.createdAt).toLocaleDateString('pt-BR')} — {t.description.substring(0, 50)}{t.description.length > 50 ? '...' : ''}
+                    </p>
+                  </div>
+                  <Badge className={`${STATUS_CONFIG[t.status].color} border-0`}>
+                    {STATUS_CONFIG[t.status].label}
+                  </Badge>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+
+        {/* Ticket detail */}
+        {ticketToShow && (
           <div className="mt-6 space-y-4">
+            {tickets.length > 1 && (
+              <Button variant="ghost" className="text-sm gap-1" onClick={() => setSelectedTicket(null)}>
+                ← Voltar à lista
+              </Button>
+            )}
+
             <Card className="border-0 shadow-sm">
               <CardContent className="p-6 space-y-4">
                 <div className="flex items-start justify-between">
                   <div>
                     <p className="text-xs text-muted-foreground">Ticket</p>
-                    <p className="font-bold text-base">{ticket.id}</p>
+                    <p className="font-bold text-base">{ticketToShow.id}</p>
                   </div>
-                  <Badge className={`${STATUS_CONFIG[ticket.status].color} border-0`}>
-                    {STATUS_CONFIG[ticket.status].label}
+                  <Badge className={`${STATUS_CONFIG[ticketToShow.status].color} border-0`}>
+                    {STATUS_CONFIG[ticketToShow.status].label}
                   </Badge>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3 text-sm">
                   <div>
                     <p className="text-xs text-muted-foreground">Nome</p>
-                    <p className="font-medium">{ticket.name}</p>
+                    <p className="font-medium">{ticketToShow.name}</p>
                   </div>
                   <div>
                     <p className="text-xs text-muted-foreground">WhatsApp</p>
-                    <p className="font-medium">{ticket.whatsapp}</p>
+                    <p className="font-medium">{ticketToShow.whatsapp}</p>
                   </div>
                   <div className="col-span-2">
                     <p className="text-xs text-muted-foreground">Local</p>
-                    <p className="font-medium">{ticket.location}</p>
+                    <p className="font-medium">{ticketToShow.location}</p>
                   </div>
                   <div className="col-span-2">
                     <p className="text-xs text-muted-foreground">Descrição</p>
-                    <p className="font-medium">{ticket.description}</p>
+                    <p className="font-medium">{ticketToShow.description}</p>
                   </div>
                   <div className="col-span-2">
                     <p className="text-xs text-muted-foreground">Data</p>
                     <p className="font-medium">
-                      {new Date(ticket.createdAt).toLocaleDateString('pt-BR')} às{' '}
-                      {new Date(ticket.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                      {new Date(ticketToShow.createdAt).toLocaleDateString('pt-BR')} às{' '}
+                      {new Date(ticketToShow.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                     </p>
                   </div>
                 </div>
 
-                {ticket.linkedOrderId && (
+                {ticketToShow.linkedOrderId && (
                   <div className="bg-primary/5 p-3 rounded-lg">
                     <p className="text-sm font-medium text-primary">
-                      ✅ Ordem de Serviço #{ticket.linkedOrderId} vinculada
+                      ✅ Ordem de Serviço #{ticketToShow.linkedOrderId} vinculada
                     </p>
                   </div>
                 )}
               </CardContent>
             </Card>
 
-            {/* Progress tracker */}
-            {ticket.status !== 'rejected' && (
+            {ticketToShow.status !== 'rejected' && (
               <Card className="border-0 shadow-sm">
                 <CardContent className="p-6">
                   <p className="text-sm font-bold mb-4">Progresso do Chamado</p>
                   <div className="space-y-0">
                     {STEPS.map((step, i) => {
-                      const current = getStepIndex(ticket.status);
+                      const current = getStepIndex(ticketToShow.status);
                       const isActive = i <= current;
                       const isCurrent = i === current;
                       const config = STATUS_CONFIG[step];
@@ -179,7 +243,7 @@ const TrackTicket = () => {
               </Card>
             )}
 
-            {ticket.status === 'rejected' && (
+            {ticketToShow.status === 'rejected' && (
               <Card className="border-0 shadow-sm border-l-4 border-l-destructive">
                 <CardContent className="p-6 text-center space-y-2">
                   <XCircle className="h-10 w-10 mx-auto text-destructive" />
