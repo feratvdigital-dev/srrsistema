@@ -47,6 +47,7 @@ const OrderDetail = () => {
   const [materialCost, setMaterialCost] = useState(order?.materialCost?.toString() || '');
   const [materialDescription, setMaterialDescription] = useState(order?.materialDescription || '');
   const [assignedTechnician, setAssignedTechnician] = useState(order?.assignedTechnician || '');
+  const [address, setAddress] = useState(order?.address || '');
   const [visitCost, setVisitCost] = useState('');
   const [showRejectForm, setShowRejectForm] = useState(false);
   const [uploadingPhase, setUploadingPhase] = useState<string | null>(null);
@@ -85,6 +86,7 @@ const OrderDetail = () => {
       materialCost: parseFloat(materialCost) || 0,
       materialDescription,
       assignedTechnician,
+      address,
     });
     toast({ title: 'Alterações salvas!' });
   };
@@ -97,6 +99,7 @@ const OrderDetail = () => {
       materialCost: parseFloat(materialCost) || 0,
       materialDescription,
       assignedTechnician,
+      address,
     };
     if (status === 'executed') updates.executedAt = new Date().toISOString();
     if (status === 'closed') {
@@ -156,9 +159,16 @@ const OrderDetail = () => {
               </div>
             </div>
             <div className="text-sm space-y-1 text-muted-foreground">
-              <div className="flex items-center gap-2">
-                <MapPin className="h-4 w-4" /> {order.address}
-              </div>
+              {isEditable ? (
+                <div className="flex items-center gap-2">
+                  <MapPin className="h-4 w-4 shrink-0" />
+                  <Input value={address} onChange={e => setAddress(e.target.value)} className="h-8 text-sm" />
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <MapPin className="h-4 w-4" /> {order.address}
+                </div>
+              )}
               {order.latitude && order.longitude && (
                 <a
                   href={`https://maps.google.com/?q=${order.latitude},${order.longitude}`}
