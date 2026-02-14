@@ -58,12 +58,16 @@ const ClientRequest = () => {
 
   const handlePhotos = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
+    if (photos.length + files.length > 10) {
+      toast({ title: 'Máximo de 10 fotos permitido', variant: 'destructive' });
+      return;
+    }
     setUploading(true);
     try {
       const urls = await uploadPhotosFromFiles(files, 'tickets');
       setPhotos(prev => [...prev, ...urls]);
-    } catch {
-      toast({ title: 'Erro ao enviar fotos', variant: 'destructive' });
+    } catch (err: any) {
+      toast({ title: err?.message || 'Erro ao enviar fotos', variant: 'destructive' });
     } finally {
       setUploading(false);
     }
@@ -71,19 +75,43 @@ const ClientRequest = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Input validation
+    const trimmedName = name.trim();
+    const trimmedWhatsapp = whatsapp.trim();
+    const trimmedLocation = location.trim();
+    const trimmedDescription = description.trim();
+    
+    if (!trimmedName || trimmedName.length > 200) {
+      toast({ title: 'Nome inválido (máx 200 caracteres)', variant: 'destructive' });
+      return;
+    }
+    if (!trimmedWhatsapp || trimmedWhatsapp.length > 20) {
+      toast({ title: 'WhatsApp inválido', variant: 'destructive' });
+      return;
+    }
+    if (!trimmedLocation || trimmedLocation.length > 500) {
+      toast({ title: 'Endereço inválido (máx 500 caracteres)', variant: 'destructive' });
+      return;
+    }
+    if (!trimmedDescription || trimmedDescription.length > 5000) {
+      toast({ title: 'Descrição inválida (máx 5000 caracteres)', variant: 'destructive' });
+      return;
+    }
+
     const id = `T${Date.now()}`;
     const { error } = await supabase
       .from('client_tickets')
       .insert({
         id,
-        name,
-        whatsapp,
-        location,
-        description,
+        name: trimmedName,
+        whatsapp: trimmedWhatsapp,
+        location: trimmedLocation,
+        description: trimmedDescription,
         photos,
       });
     if (error) {
-      toast({ title: 'Erro ao enviar chamado', variant: 'destructive' });
+      toast({ title: 'Erro ao enviar chamado. Tente novamente.', variant: 'destructive' });
       return;
     }
     setTicketId(id);

@@ -34,8 +34,9 @@ function getDB() {
         );
         return $pdo;
     } catch (PDOException $e) {
+        error_log('Database connection error: ' . $e->getMessage());
         http_response_code(500);
-        echo json_encode(['success' => false, 'error' => 'Erro de conexão: ' . $e->getMessage()]);
+        echo json_encode(['success' => false, 'error' => 'Erro de conexão com o banco de dados']);
         exit();
     }
 }
