@@ -82,6 +82,19 @@
   body {
     @apply bg-background text-foreground font-sans antialiased;
     font-family: 'Inter', sans-serif;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Faster touch response on mobile */
+  button, a, [role="button"] {
+    touch-action: manipulation;
+  }
+  
+  /* GPU-accelerated scrolling */
+  .overflow-y-auto, .overflow-x-auto {
+    will-change: scroll-position;
+    -webkit-overflow-scrolling: touch;
   }
 }
 
