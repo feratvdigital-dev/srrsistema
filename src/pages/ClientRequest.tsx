@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Camera, CheckCircle2, Send } from 'lucide-react';
+import { Camera, CheckCircle2, Search, Send } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import logo from '@/assets/logo.png';
 
@@ -81,11 +81,11 @@ const ClientRequest = () => {
             <CheckCircle2 className="h-16 w-16 text-green-500 mx-auto" />
             <h2 className="text-xl font-bold">Chamado Enviado!</h2>
             <p className="text-muted-foreground">Seu chamado <strong>{ticketId}</strong> foi registrado. Você receberá uma mensagem no WhatsApp quando ele for aceito.</p>
-            <div className="bg-muted p-3 rounded-lg">
-              <p className="text-xs text-muted-foreground mb-1">Acompanhe seu chamado em:</p>
-              <a href="/track" className="text-sm font-bold text-primary hover:underline">/track</a>
-              <p className="text-xs text-muted-foreground mt-1">Use o código: <strong>{ticketId}</strong></p>
-            </div>
+            <a href={`/track?whatsapp=${encodeURIComponent(whatsapp)}`} className="block">
+              <Button className="w-full h-12 text-base font-semibold bg-green-600 hover:bg-green-700 text-white gap-2">
+                <Search className="h-5 w-5" /> Acompanhe seu Chamado
+              </Button>
+            </a>
             <Button onClick={() => { setSubmitted(false); setName(''); setWhatsapp(''); setLocation(''); setDescription(''); setPhotos([]); }} variant="outline" className="w-full">
               Enviar Outro Chamado
             </Button>
