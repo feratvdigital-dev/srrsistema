@@ -19,39 +19,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   });
 
   const login = async (username: string, password: string): Promise<boolean> => {
-    // Check app_users table
-    const { data: appUser } = await supabase
-      .from('app_users')
-      .select('*')
-      .eq('username', username)
-      .eq('password', password)
-      .maybeSingle();
+    try {
+      // Authenticate via server-side edge function — passwords never exposed to client
+      const { data, error } = await supabase.functions.invoke('authenticate', {
+        body: { username: username.trim(), password },
+      });
 
-    if (appUser) {
+      if (error || !data?.success) {
+        return false;
+      }
+
       setIsAuthenticated(true);
-      setUser(username);
+      setUser(data.user);
       localStorage.setItem('sr_auth', 'true');
-      localStorage.setItem('sr_user', username);
+      localStorage.setItem('sr_user', data.user);
       return true;
+    } catch {
+      return false;
     }
-
-    // Check technicians table
-    const { data: tech } = await supabase
-      .from('technicians')
-      .select('*')
-      .eq('username', username)
-      .eq('password', password)
-      .maybeSingle();
-
-    if (tech) {
-      setIsAuthenticated(true);
-      setUser(tech.name);
-      localStorage.setItem('sr_auth', 'true');
-      localStorage.setItem('sr_user', tech.name);
-      return true;
-    }
-
-    return false;
   };
 
   const logout = () => {
