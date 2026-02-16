@@ -6,8 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Trash2, DollarSign, Utensils, Fuel, Package, MoreHorizontal, CalendarIcon } from 'lucide-react';
-import googleAdsIcon from '@/assets/google-ads-icon.png';
+import { Plus, Trash2, DollarSign, Utensils, Fuel, Package, Megaphone, MoreHorizontal, CalendarIcon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -28,7 +27,7 @@ const CATEGORIES = [
   { value: 'food', label: 'Alimentação', icon: Utensils, color: 'bg-orange-100 text-orange-700' },
   { value: 'fuel', label: 'Combustível', icon: Fuel, color: 'bg-blue-100 text-blue-700' },
   { value: 'materials', label: 'Materiais', icon: Package, color: 'bg-green-100 text-green-700' },
-  { value: 'ads', label: 'Google ADS', icon: null, image: googleAdsIcon, color: 'bg-purple-100 text-purple-700' },
+  { value: 'ads', label: 'Google ADS', icon: Megaphone, color: 'bg-purple-100 text-purple-700' },
   { value: 'other', label: 'Outros', icon: MoreHorizontal, color: 'bg-gray-100 text-gray-700' },
 ];
 
@@ -171,11 +170,7 @@ const Expenses = () => {
                     return (
                       <SelectItem key={c.value} value={c.value}>
                         <span className="flex items-center gap-2">
-                          {c.image ? (
-                            <img src={c.image} alt={c.label} className="h-4 w-4 object-contain" />
-                          ) : Icon ? (
-                            <Icon className="h-4 w-4" />
-                          ) : null}
+                          {Icon && <Icon className="h-4 w-4" />}
                           {c.label}
                         </span>
                       </SelectItem>
@@ -394,11 +389,7 @@ const Expenses = () => {
                     <Card key={expense.id} className="border-0 shadow-sm">
                       <CardContent className="p-4 flex items-center gap-3">
                         <div className={`w-10 h-10 rounded-xl ${cat.color} flex items-center justify-center shrink-0`}>
-                          {cat.image ? (
-                            <img src={cat.image} alt={cat.label} className="h-5 w-5 object-contain" />
-                          ) : CatIcon ? (
-                            <CatIcon className="h-5 w-5" />
-                          ) : null}
+                          {CatIcon && <CatIcon className="h-5 w-5" />}
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="font-medium text-sm text-foreground truncate">{expense.description}</p>
