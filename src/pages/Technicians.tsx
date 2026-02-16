@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Plus, Phone, Mail, Wrench, Pencil, Trash2, Camera, FileText } from 'lucide-react';
+import { Plus, Phone, Mail, Wrench, Pencil, Trash2, Camera, FileText, Eye } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { SPECIALTY_LABELS, TECH_STATUS_LABELS } from '@/types/technician';
 import { useToast } from '@/hooks/use-toast';
@@ -29,6 +29,8 @@ const Technicians = () => {
   const [documentPhoto, setDocumentPhoto] = useState('');
   const [techUsername, setTechUsername] = useState('');
   const [techPassword, setTechPassword] = useState('');
+
+  const [viewTech, setViewTech] = useState<string | null>(null);
 
   const profileRef = useRef<HTMLInputElement>(null);
   const docRef = useRef<HTMLInputElement>(null);
@@ -248,6 +250,9 @@ const Technicians = () => {
                       </div>
                     </div>
                     <div className="flex gap-2">
+                      <Button variant="outline" className="flex-1 gap-1" size="sm" onClick={() => setViewTech(tech.id)}>
+                        <Eye className="h-3 w-3" /> Ver
+                      </Button>
                       <Button variant="outline" className="flex-1 gap-1" size="sm" onClick={() => handleEdit(tech.id)}>
                         <Pencil className="h-3 w-3" /> Editar
                       </Button>
@@ -267,8 +272,74 @@ const Technicians = () => {
           </div>
         </>
       )}
+
+      {/* View Technician Dialog */}
+      {(() => {
+        const tech = technicians.find(t => t.id === viewTech);
+        if (!tech) return null;
+        const s = techStats(tech.name);
+        return (
+          <Dialog open={!!viewTech} onOpenChange={(v) => { if (!v) setViewTech(null); }}>
+            <DialogContent className="max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Detalhes do Técnico</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="flex flex-col items-center gap-2">
+                  <Avatar className="h-24 w-24">
+                    {tech.profilePhoto ? (
+                      <AvatarImage src={tech.profilePhoto} alt={tech.name} />
+                    ) : (
+                      <AvatarFallback className="bg-primary/10 text-primary text-xl font-bold">
+                        {getInitials(tech.name)}
+                      </AvatarFallback>
+                    )}
+                  </Avatar>
+                  <p className="text-lg font-bold">{tech.name}</p>
+                  <Badge className="bg-green-100 text-green-700 border-0">
+                    {TECH_STATUS_LABELS[tech.status]}
+                  </Badge>
+                </div>
+
+                <div className="space-y-2 text-sm">
+                  <div className="flex items-center gap-2"><Wrench className="h-4 w-4 text-muted-foreground" /> {SPECIALTY_LABELS[tech.specialty]}</div>
+                  <div className="flex items-center gap-2"><Phone className="h-4 w-4 text-muted-foreground" /> {tech.phone || '-'}</div>
+                  <div className="flex items-center gap-2"><Mail className="h-4 w-4 text-muted-foreground" /> {tech.email || '-'}</div>
+                  {tech.cpf && <div className="flex items-center gap-2"><FileText className="h-4 w-4 text-muted-foreground" /> CPF: {tech.cpf}</div>}
+                  {tech.rg && <div className="flex items-center gap-2"><FileText className="h-4 w-4 text-muted-foreground" /> RG: {tech.rg}</div>}
+                </div>
+
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="text-center p-3 rounded-lg bg-muted">
+                    <p className="font-bold text-foreground text-lg">{s.total}</p>
+                    <p className="text-xs text-muted-foreground">Total</p>
+                  </div>
+                  <div className="text-center p-3 rounded-lg bg-orange-50">
+                    <p className="font-bold text-orange-600 text-lg">{s.open}</p>
+                    <p className="text-xs text-muted-foreground">Em aberto</p>
+                  </div>
+                  <div className="text-center p-3 rounded-lg bg-green-50">
+                    <p className="font-bold text-green-600 text-lg">{s.closed}</p>
+                    <p className="text-xs text-muted-foreground">Encerradas</p>
+                  </div>
+                </div>
+
+                {tech.documentPhoto && (
+                  <div className="space-y-2">
+                    <Label className="font-semibold">Documento com Foto</Label>
+                    <img src={tech.documentPhoto} alt="Documento" className="w-full rounded-lg border object-contain max-h-80" />
+                  </div>
+                )}
+              </div>
+            </DialogContent>
+          </Dialog>
+        );
+      })()}
     </div>
   );
 };
 
 export default Technicians;
+
+// View dialog is rendered inside the component above, adding it before the closing div
+
