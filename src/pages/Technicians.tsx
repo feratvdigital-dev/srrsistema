@@ -327,7 +327,12 @@ const Technicians = () => {
                 {tech.documentPhoto && (
                   <div className="space-y-2">
                     <Label className="font-semibold">Documento com Foto</Label>
-                    <img src={tech.documentPhoto} alt="Documento" className="w-full rounded-lg border object-contain max-h-80" />
+                    <img
+                      src={tech.documentPhoto}
+                      alt="Documento"
+                      className="w-full rounded-lg border object-contain max-h-80 cursor-pointer hover:opacity-90 transition-opacity"
+                      onClick={() => window.open(tech.documentPhoto, '_blank')}
+                    />
                   </div>
                 )}
               </div>
