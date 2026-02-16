@@ -28,6 +28,7 @@ const OrdersMap = () => {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
   const routeLayerRef = useRef<L.LayerGroup | null>(null);
+  const baseMarkerRef = useRef<L.Marker | null>(null);
   const [filters, setFilters] = useState<Record<OrderStatus, boolean>>({
     open: true, quote: true, executing: true, executed: true, closed: true,
   });
@@ -118,13 +119,14 @@ const OrdersMap = () => {
     // Base marker
     const baseIcon = L.divIcon({
       className: 'custom-marker',
-      html: `<div style="background:#dc2626;width:34px;height:34px;border-radius:50%;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;font-size:16px;cursor:pointer;">🏠</div>`,
-      iconSize: [34, 34],
-      iconAnchor: [17, 17],
+      html: `<div style="background:#dc2626;width:44px;height:44px;border-radius:50%;border:4px solid white;box-shadow:0 3px 10px rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;font-size:22px;cursor:pointer;">🏠</div>`,
+      iconSize: [44, 44],
+      iconAnchor: [22, 22],
     });
     const baseMarker = L.marker([BASE_LOCATION.lat, BASE_LOCATION.lng], { icon: baseIcon, zIndexOffset: 1000 })
       .addTo(map)
       .bindPopup(`<div style="font-family:system-ui;"><strong>🏠 ${BASE_LOCATION.label}</strong><p style="margin:4px 0;font-size:12px;">${BASE_LOCATION.address}</p><p style="margin:4px 0;font-size:11px;color:#2563eb;font-weight:600;">Clique para traçar rota até um atendimento</p></div>`);
+    baseMarkerRef.current = baseMarker;
     
     baseMarker.on('click', () => {
       routeModeRef.current = true;
@@ -142,8 +144,9 @@ const OrdersMap = () => {
     const map = mapInstanceRef.current;
     if (!map) return;
 
+    // Remove order markers but keep base and tile layers
     map.eachLayer(layer => {
-      if (layer instanceof L.Marker) map.removeLayer(layer);
+      if (layer instanceof L.Marker && layer !== baseMarkerRef.current) map.removeLayer(layer);
     });
 
     const bounds: L.LatLngExpression[] = [];
