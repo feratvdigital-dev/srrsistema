@@ -166,13 +166,21 @@ const Expenses = () => {
               <Select value={category} onValueChange={setCategory}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {CATEGORIES.map(c => (
-                    <SelectItem key={c.value} value={c.value}>
-                      <span className="flex items-center gap-2">
-                        <c.icon className="h-4 w-4" /> {c.label}
-                      </span>
-                    </SelectItem>
-                  ))}
+                  {CATEGORIES.map(c => {
+                    const Icon = c.icon;
+                    return (
+                      <SelectItem key={c.value} value={c.value}>
+                        <span className="flex items-center gap-2">
+                          {c.image ? (
+                            <img src={c.image} alt={c.label} className="h-4 w-4 object-contain" />
+                          ) : Icon ? (
+                            <Icon className="h-4 w-4" />
+                          ) : null}
+                          {c.label}
+                        </span>
+                      </SelectItem>
+                    );
+                  })}
                 </SelectContent>
               </Select>
             </div>
