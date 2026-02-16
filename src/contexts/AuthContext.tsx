@@ -4,23 +4,50 @@ import { supabase } from '@/integrations/supabase/client';
 interface AuthContextType {
   isAuthenticated: boolean;
   user: string | null;
+  role: string | null;
   login: (username: string, password: string) => Promise<boolean>;
   logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const SESSION_KEY = 'sr_session';
+
+interface SessionData {
+  user: string;
+  role: string;
+  token: string;
+  expiresAt: number;
+}
+
+function getStoredSession(): SessionData | null {
+  try {
+    const raw = sessionStorage.getItem(SESSION_KEY);
+    if (!raw) return null;
+    const session: SessionData = JSON.parse(raw);
+    // Check expiration (24h)
+    if (Date.now() > session.expiresAt) {
+      sessionStorage.removeItem(SESSION_KEY);
+      return null;
+    }
+    return session;
+  } catch {
+    sessionStorage.removeItem(SESSION_KEY);
+    return null;
+  }
+}
+
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(() => {
-    return localStorage.getItem('sr_auth') === 'true';
-  });
-  const [user, setUser] = useState<string | null>(() => {
-    return localStorage.getItem('sr_user');
-  });
+  const [session, setSession] = useState<SessionData | null>(() => getStoredSession());
+
+  const isAuthenticated = !!session;
+  const user = session?.user ?? null;
+  const role = session?.role ?? null;
 
   const login = async (username: string, password: string): Promise<boolean> => {
     try {
-      // Authenticate via server-side edge function — passwords never exposed to client
+      if (!username.trim() || !password) return false;
+
       const { data, error } = await supabase.functions.invoke('authenticate', {
         body: { username: username.trim(), password },
       });
@@ -29,10 +56,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return false;
       }
 
-      setIsAuthenticated(true);
-      setUser(data.user);
-      localStorage.setItem('sr_auth', 'true');
-      localStorage.setItem('sr_user', data.user);
+      const newSession: SessionData = {
+        user: data.user,
+        role: data.role,
+        token: data.sessionToken,
+        expiresAt: Date.now() + 24 * 60 * 60 * 1000, // 24h
+      };
+
+      setSession(newSession);
+      sessionStorage.setItem(SESSION_KEY, JSON.stringify(newSession));
+
+      // Clean up legacy localStorage
+      localStorage.removeItem('sr_auth');
+      localStorage.removeItem('sr_user');
+
       return true;
     } catch {
       return false;
@@ -40,14 +77,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const logout = () => {
-    setIsAuthenticated(false);
-    setUser(null);
+    setSession(null);
+    sessionStorage.removeItem(SESSION_KEY);
     localStorage.removeItem('sr_auth');
     localStorage.removeItem('sr_user');
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, user, login, logout }}>
+    <AuthContext.Provider value={{ isAuthenticated, user, role, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
