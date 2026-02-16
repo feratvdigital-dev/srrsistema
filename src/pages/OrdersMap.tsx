@@ -13,7 +13,7 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
 });
 
-const BASE_LOCATION = { lat: -22.8595, lng: -47.1327, label: 'Base Operacional', address: 'R. Alcídio Rodelli, 1244 - Cidade Satélite Íris, Campinas - SP' };
+const BASE_LOCATION = { lat: -22.9380, lng: -47.1361, label: 'Base Operacional', address: 'R. Alcídio Rodelli, 1244 - Cidade Satélite Íris, Campinas - SP' };
 
 const STATUS_MAP: Record<OrderStatus, { label: string; emoji: string; color: string; bg: string }> = {
   open: { label: 'Em Aberto', emoji: '📋', color: '#f59e0b', bg: 'bg-amber-500' },
