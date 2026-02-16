@@ -78,7 +78,9 @@ const Technicians = () => {
   };
 
   const techStats = (techName: string) => {
-    const techOrders = orders.filter(o => o.assignedTechnician === techName);
+    const techOrders = orders.filter(o => 
+      o.assignedTechnician?.split(',').map(n => n.trim()).includes(techName)
+    );
     return {
       total: techOrders.length,
       open: techOrders.filter(o => o.status !== 'closed').length,
