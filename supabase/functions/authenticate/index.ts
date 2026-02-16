@@ -1,11 +1,19 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import * as bcrypt from "https://deno.land/x/bcrypt@v0.4.1/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
+
+// Simple password hashing using Web Crypto API (no external deps)
+async function hashPassword(password: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(password);
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
+}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -22,7 +30,6 @@ serve(async (req) => {
       );
     }
 
-    // Validate input lengths
     if (typeof username !== "string" || typeof password !== "string" || username.length > 100 || password.length > 200) {
       return new Response(
         JSON.stringify({ success: false, error: "Credenciais inválidas" }),
@@ -44,24 +51,24 @@ serve(async (req) => {
       .maybeSingle();
 
     if (appUser) {
+      const hashedInput = await hashPassword(password);
       let valid = false;
-      if (appUser.password.startsWith("$2")) {
-        // Already hashed — compare with bcrypt
-        valid = await bcrypt.compare(password, appUser.password);
+
+      // Check if password is already hashed (64 char hex = SHA-256)
+      if (appUser.password.length === 64 && /^[0-9a-f]+$/.test(appUser.password)) {
+        valid = appUser.password === hashedInput;
       } else {
-        // Legacy plaintext — compare directly, then hash and update
+        // Legacy plaintext comparison, then hash and update
         valid = appUser.password === password;
         if (valid) {
-          const hashed = await bcrypt.hash(password);
           await supabase
             .from("app_users")
-            .update({ password: hashed })
+            .update({ password: hashedInput })
             .eq("username", trimmedUsername);
         }
       }
 
       if (valid) {
-        // Generate a simple session token
         const sessionToken = crypto.randomUUID();
         return new Response(
           JSON.stringify({
@@ -83,16 +90,17 @@ serve(async (req) => {
       .maybeSingle();
 
     if (tech && tech.password) {
+      const hashedInput = await hashPassword(password);
       let valid = false;
-      if (tech.password.startsWith("$2")) {
-        valid = await bcrypt.compare(password, tech.password);
+
+      if (tech.password.length === 64 && /^[0-9a-f]+$/.test(tech.password)) {
+        valid = tech.password === hashedInput;
       } else {
         valid = tech.password === password;
         if (valid) {
-          const hashed = await bcrypt.hash(password);
           await supabase
             .from("technicians")
-            .update({ password: hashed })
+            .update({ password: hashedInput })
             .eq("username", trimmedUsername);
         }
       }
@@ -115,7 +123,8 @@ serve(async (req) => {
       JSON.stringify({ success: false, error: "Credenciais inválidas" }),
       { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
-  } catch {
+  } catch (err) {
+    console.error("Auth error:", err);
     return new Response(
       JSON.stringify({ success: false, error: "Erro ao processar solicitação" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
