@@ -30,7 +30,7 @@ const Login = () => {
     <div className="min-h-screen flex flex-col items-center justify-center p-4" style={{ background: 'linear-gradient(135deg, hsl(215 40% 16%), hsl(215 40% 22%))' }}>
       <Card className="w-full max-w-sm sm:max-w-md shadow-2xl border-0 overflow-hidden">
         <div className="p-6 sm:p-8 flex flex-col items-center" style={{ background: 'linear-gradient(135deg, hsl(215 40% 16%), hsl(215 40% 22%))' }}>
-          <img src={logo} alt="SR Resolve" className="h-16 sm:h-20 w-auto mb-3 sm:mb-4" />
+          <img src={logo} alt="SR Resolve" className="h-24 sm:h-32 w-auto mb-4 sm:mb-5 drop-shadow-lg" />
           <h1 className="text-xl sm:text-2xl font-bold text-primary-foreground">SR Resolve</h1>
           <p className="text-primary-foreground/80 text-xs sm:text-sm">Gestão de Manutenção</p>
         </div>
