@@ -6,7 +6,8 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Trash2, DollarSign, Utensils, Fuel, Package, Megaphone, MoreHorizontal, CalendarIcon } from 'lucide-react';
+import { Plus, Trash2, DollarSign, Utensils, Fuel, Package, Megaphone, MoreHorizontal, CalendarIcon, TrendingUp, TrendingDown, Wallet } from 'lucide-react';
+import { useOrders } from '@/contexts/OrderContext';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -37,6 +38,7 @@ type DateFilter = 'all' | 'day' | 'month' | 'year' | 'custom';
 
 const Expenses = () => {
   const { toast } = useToast();
+  const { orders } = useOrders();
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
@@ -127,6 +129,24 @@ const Expenses = () => {
 
   const totalFiltered = filtered.reduce((s, e) => s + e.amount, 0);
 
+  // Revenue from closed orders in the same period
+  const totalRevenue = useMemo(() => {
+    let result = orders.filter(o => o.status === 'closed');
+    if (dateFilter !== 'all') {
+      result = result.filter(o => {
+        const d = new Date(o.closedAt || o.createdAt);
+        if (dateFilter === 'day') return d >= startOfDay(selectedDate) && d <= endOfDay(selectedDate);
+        if (dateFilter === 'month') return d >= startOfMonth(selectedDate) && d <= endOfMonth(selectedDate);
+        if (dateFilter === 'year') return d >= startOfYear(selectedDate) && d <= endOfYear(selectedDate);
+        if (dateFilter === 'custom' && dateFrom && dateTo) return d >= startOfDay(dateFrom) && d <= endOfDay(dateTo);
+        return true;
+      });
+    }
+    return result.reduce((s, o) => s + o.laborCost + o.materialCost, 0);
+  }, [orders, dateFilter, selectedDate, dateFrom, dateTo]);
+
+  const profit = totalRevenue - totalFiltered;
+
   // Group by date
   const grouped = filtered.reduce<Record<string, Expense[]>>((acc, e) => {
     const date = new Date(e.createdAt).toLocaleDateString('pt-BR');
@@ -194,21 +214,53 @@ const Expenses = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Summary */}
-      <Card className="border-0 shadow-sm">
-        <CardContent className="p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">Total de Despesas</p>
-              <p className="text-2xl font-bold text-foreground">R$ {totalFiltered.toFixed(2).replace('.', ',')}</p>
-              <p className="text-xs text-muted-foreground">{filtered.length} registro(s) — {getDateFilterLabel()}</p>
+      {/* Financial Summary */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <Card className="border-0 shadow-sm">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Total Despesas</p>
+                <p className="text-xl font-bold text-red-600">R$ {totalFiltered.toFixed(2).replace('.', ',')}</p>
+                <p className="text-xs text-muted-foreground">{filtered.length} registro(s)</p>
+              </div>
+              <div className="w-10 h-10 rounded-xl bg-red-100 text-red-600 flex items-center justify-center">
+                <TrendingDown className="h-5 w-5" />
+              </div>
             </div>
-            <div className="w-12 h-12 rounded-xl bg-red-100 text-red-600 flex items-center justify-center">
-              <DollarSign className="h-6 w-6" />
+          </CardContent>
+        </Card>
+        <Card className="border-0 shadow-sm">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Total Ganhos</p>
+                <p className="text-xl font-bold text-green-600">R$ {totalRevenue.toFixed(2).replace('.', ',')}</p>
+                <p className="text-xs text-muted-foreground">Chamados encerrados</p>
+              </div>
+              <div className="w-10 h-10 rounded-xl bg-green-100 text-green-600 flex items-center justify-center">
+                <TrendingUp className="h-5 w-5" />
+              </div>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+        <Card className="border-0 shadow-sm">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Lucro</p>
+                <p className={`text-xl font-bold ${profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  R$ {profit.toFixed(2).replace('.', ',')}
+                </p>
+                <p className="text-xs text-muted-foreground">{getDateFilterLabel()}</p>
+              </div>
+              <div className={`w-10 h-10 rounded-xl ${profit >= 0 ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'} flex items-center justify-center`}>
+                <Wallet className="h-5 w-5" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Date Filters */}
       <Card className="border-0 shadow-sm">
