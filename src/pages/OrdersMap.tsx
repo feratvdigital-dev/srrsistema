@@ -28,31 +28,35 @@ const OrdersMap = () => {
   const [filters, setFilters] = useState<Record<OrderStatus, boolean>>({
     open: true, quote: true, executing: true, executed: true, closed: true,
   });
+  const [selectedCity, setSelectedCity] = useState<string | null>(null);
 
   const toggleFilter = (status: OrderStatus) => {
     setFilters(prev => ({ ...prev, [status]: !prev[status] }));
   };
 
+  const extractCity = (address: string) => {
+    const parts = address.split(',').map(p => p.trim());
+    let city = parts.length >= 2 ? parts[parts.length - 2] : parts[0];
+    city = city.replace(/\s*-\s*[A-Z]{2}$/, '').trim();
+    return city || address;
+  };
+
   const allOrders = orders.filter(o => o.address);
-  const filteredOrders = allOrders.filter(o => filters[o.status]);
+  const statusFiltered = allOrders.filter(o => filters[o.status]);
+  const filteredOrders = selectedCity
+    ? statusFiltered.filter(o => extractCity(o.address) === selectedCity)
+    : statusFiltered;
 
   // Group orders by city (extract city from address)
   const cityCounts = useMemo(() => {
     const counts: Record<string, number> = {};
-    filteredOrders.forEach(order => {
+    statusFiltered.forEach(order => {
       if (!order.address) return;
-      // Try to extract city: take the part after last comma or the whole address
-      const parts = order.address.split(',').map(p => p.trim());
-      // Usually city is the second-to-last or last meaningful part
-      let city = parts.length >= 2 ? parts[parts.length - 2] : parts[0];
-      // Remove state abbreviation patterns like "- SP", "- RJ" at end
-      city = city.replace(/\s*-\s*[A-Z]{2}$/, '').trim();
-      if (!city) city = order.address;
+      const city = extractCity(order.address);
       counts[city] = (counts[city] || 0) + 1;
     });
-    // Sort by count descending
     return Object.entries(counts).sort((a, b) => b[1] - a[1]);
-  }, [filteredOrders]);
+  }, [statusFiltered]);
 
   useEffect(() => {
     if (!mapRef.current || mapInstanceRef.current) return;
@@ -153,24 +157,36 @@ const OrdersMap = () => {
         })}
       </div>
 
-      {/* Cities summary */}
+      {/* Cities */}
       {cityCounts.length > 0 && (
         <Card className="border-0 shadow-sm">
           <CardContent className="p-4">
             <p className="text-sm font-bold text-foreground flex items-center gap-2 mb-3">
-              <MapPin className="h-4 w-4" /> Chamados por Cidade
+              <MapPin className="h-4 w-4" /> Cidades
             </p>
             <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => setSelectedCity(null)}
+                className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
+                  !selectedCity
+                    ? 'bg-foreground text-background border-foreground'
+                    : 'bg-muted text-foreground border-border'
+                }`}
+              >
+                Todas
+              </button>
               {cityCounts.map(([city, count]) => (
-                <span
+                <button
                   key={city}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-muted text-foreground border border-border"
+                  onClick={() => setSelectedCity(selectedCity === city ? null : city)}
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
+                    selectedCity === city
+                      ? 'bg-foreground text-background border-foreground'
+                      : 'bg-muted text-foreground border-border'
+                  }`}
                 >
-                  {city}
-                  <span className="bg-primary text-primary-foreground rounded-full px-1.5 py-0.5 text-[10px] font-bold min-w-[20px] text-center">
-                    {count}
-                  </span>
-                </span>
+                  {city} ({count})
+                </button>
               ))}
             </div>
           </CardContent>
