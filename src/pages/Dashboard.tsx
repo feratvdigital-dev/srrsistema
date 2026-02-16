@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useOrders } from '@/contexts/OrderContext';
 import { useTechnicians } from '@/contexts/TechnicianContext';
 import { Card, CardContent } from '@/components/ui/card';
@@ -8,8 +8,9 @@ import { Input } from '@/components/ui/input';
 import { Link } from 'react-router-dom';
 import {
   FileText, Circle, Play, CheckCircle2, Lock,
-  Search, Droplets, Zap, Wrench, MapPin, User, Plus
+  Search, Droplets, Zap, Wrench, MapPin, User, Plus, Wallet, ArrowRight
 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 import { STATUS_LABELS, SERVICE_TYPE_LABELS, OrderStatus, ServiceType } from '@/types/serviceOrder';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue
@@ -36,6 +37,27 @@ const Dashboard = () => {
   const [statusFilter, setStatusFilter] = useState<OrderStatus | 'all'>('all');
   const [techFilter, setTechFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState<ServiceType | 'all'>('all');
+  const [monthExpenses, setMonthExpenses] = useState(0);
+
+  // Fetch current month expenses
+  useEffect(() => {
+    const now = new Date();
+    const start = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+    const end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59).toISOString();
+    supabase
+      .from('expenses')
+      .select('amount')
+      .gte('created_at', start)
+      .lte('created_at', end)
+      .then(({ data }) => {
+        if (data) setMonthExpenses(data.reduce((s, e) => s + Number(e.amount), 0));
+      });
+  }, []);
+
+  const closedRevenue = useMemo(() => {
+    return orders.filter(o => o.status === 'closed').reduce((s, o) => s + o.laborCost + o.materialCost, 0);
+  }, [orders]);
+  const profit = closedRevenue - monthExpenses;
 
   const stats = [
     { label: 'Total de OS', value: orders.length, icon: FileText, bgClass: 'bg-gray-100', textClass: 'text-gray-600' },
@@ -77,6 +99,39 @@ const Dashboard = () => {
           </Card>
         ))}
       </div>
+
+      {/* Financial Quick Summary */}
+      <Link to="/expenses">
+        <Card className="border-0 shadow-sm hover:shadow-md transition-shadow cursor-pointer">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className={`w-10 h-10 rounded-xl ${profit >= 0 ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'} flex items-center justify-center`}>
+                  <Wallet className="h-5 w-5" />
+                </div>
+                <div className="flex gap-6">
+                  <div>
+                    <p className="text-xs text-muted-foreground">Ganhos</p>
+                    <p className="text-sm font-bold text-green-600">R$ {closedRevenue.toFixed(2).replace('.', ',')}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Despesas (mês)</p>
+                    <p className="text-sm font-bold text-red-600">R$ {monthExpenses.toFixed(2).replace('.', ',')}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Lucro</p>
+                    <p className={`text-sm font-bold ${profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>R$ {profit.toFixed(2).replace('.', ',')}</p>
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                <span className="hidden sm:inline">Ver despesas</span>
+                <ArrowRight className="h-4 w-4" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </Link>
 
       {/* Search & Filters */}
       <Card className="border-0 shadow-sm">
