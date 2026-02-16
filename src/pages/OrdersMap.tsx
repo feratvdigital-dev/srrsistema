@@ -13,6 +13,8 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
 });
 
+const BASE_LOCATION = { lat: -22.8595, lng: -47.1327, label: 'Base Operacional', address: 'R. Alcídio Rodelli, 1244 - Cidade Satélite Íris, Campinas - SP' };
+
 const STATUS_MAP: Record<OrderStatus, { label: string; emoji: string; color: string; bg: string }> = {
   open: { label: 'Em Aberto', emoji: '📋', color: '#f59e0b', bg: 'bg-amber-500' },
   quote: { label: 'Orçamento', emoji: '💰', color: '#9333ea', bg: 'bg-purple-600' },
@@ -66,11 +68,22 @@ const OrdersMap = () => {
 
   useEffect(() => {
     if (!mapRef.current || mapInstanceRef.current) return;
-    const map = L.map(mapRef.current).setView([-14.235, -51.9253], 4);
+    const map = L.map(mapRef.current).setView([BASE_LOCATION.lat, BASE_LOCATION.lng], 12);
     mapInstanceRef.current = map;
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap contributors',
     }).addTo(map);
+
+    // Base marker
+    const baseIcon = L.divIcon({
+      className: 'custom-marker',
+      html: `<div style="background:#dc2626;width:34px;height:34px;border-radius:50%;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;font-size:16px;">🏠</div>`,
+      iconSize: [34, 34],
+      iconAnchor: [17, 17],
+    });
+    L.marker([BASE_LOCATION.lat, BASE_LOCATION.lng], { icon: baseIcon, zIndexOffset: 1000 })
+      .addTo(map)
+      .bindPopup(`<div style="font-family:system-ui;"><strong>🏠 ${BASE_LOCATION.label}</strong><p style="margin:4px 0;font-size:12px;">${BASE_LOCATION.address}</p></div>`);
     return () => { map.remove(); mapInstanceRef.current = null; };
   }, []);
 
