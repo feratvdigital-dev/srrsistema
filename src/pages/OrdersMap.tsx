@@ -35,10 +35,16 @@ const OrdersMap = () => {
   };
 
   const extractCity = (address: string) => {
-    const parts = address.split(',').map(p => p.trim());
-    let city = parts.length >= 2 ? parts[parts.length - 2] : parts[0];
-    city = city.replace(/\s*-\s*[A-Z]{2}$/, '').trim();
-    return city || address;
+    // Address format: "Street - Neighborhood - City - State, ZIP"
+    const parts = address.split(' - ').map(p => p.trim());
+    if (parts.length >= 3) {
+      // City is second-to-last part (before "SP, 13187-149")
+      return parts[parts.length - 2];
+    }
+    if (parts.length === 2) return parts[1].replace(/\s*,\s*\d.*$/, '').trim();
+    // Fallback: try comma split
+    const commaParts = address.split(',').map(p => p.trim());
+    return commaParts.length >= 2 ? commaParts[commaParts.length - 2] : address;
   };
 
   const allOrders = orders.filter(o => o.address);
