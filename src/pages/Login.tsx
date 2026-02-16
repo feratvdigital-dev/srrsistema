@@ -56,7 +56,16 @@ const Login = () => {
           </form>
         </CardContent>
       </Card>
-      <p className="mt-6 text-xs text-white/60">© 2026 IT Digital. Todos os direitos reservados.</p>
+      <div className="mt-6 text-center space-y-1">
+        <p className="text-xs text-white/60">© 2025 Conceitual Pinturas. Todos os direitos reservados.</p>
+        <p className="text-xs text-white/60">Pinturas e Reparos desde 2021 ©</p>
+        <p className="text-xs text-white/40">
+          Desenvolvido por{' '}
+          <a href="https://www.instagram.com/agenciaitd/" target="_blank" rel="noopener noreferrer" className="text-white/60 hover:text-white underline transition-colors">
+            IT Digital
+          </a>
+        </p>
+      </div>
     </div>
   );
 };
