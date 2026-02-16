@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Link } from 'react-router-dom';
 import {
-  FileText, Circle, Play, CheckCircle2, Lock, DollarSign,
+  FileText, Circle, Play, CheckCircle2, Lock,
   Search, Droplets, Zap, Wrench, MapPin, User, Plus
 } from 'lucide-react';
 import { STATUS_LABELS, SERVICE_TYPE_LABELS, OrderStatus, ServiceType } from '@/types/serviceOrder';
@@ -37,10 +37,6 @@ const Dashboard = () => {
   const [techFilter, setTechFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState<ServiceType | 'all'>('all');
 
-  const totalRevenue = orders
-    .filter(o => o.status === 'closed')
-    .reduce((sum, o) => sum + o.laborCost + o.materialCost, 0);
-
   const stats = [
     { label: 'Total de OS', value: orders.length, icon: FileText, bgClass: 'bg-gray-100', textClass: 'text-gray-600' },
     { label: 'Em Aberto', value: orders.filter(o => o.status === 'open').length, icon: Circle, bgClass: 'bg-yellow-100', textClass: 'text-yellow-600' },
@@ -48,7 +44,6 @@ const Dashboard = () => {
     { label: 'Em Execução', value: orders.filter(o => o.status === 'executing').length, icon: Play, bgClass: 'bg-blue-100', textClass: 'text-blue-600' },
     { label: 'Executado', value: orders.filter(o => o.status === 'executed').length, icon: CheckCircle2, bgClass: 'bg-green-100', textClass: 'text-green-600' },
     { label: 'Encerrado', value: orders.filter(o => o.status === 'closed').length, icon: Lock, bgClass: 'bg-gray-100', textClass: 'text-gray-500' },
-    { label: 'Faturamento', value: `R$ ${totalRevenue.toFixed(2).replace('.', ',')}`, icon: DollarSign, bgClass: 'bg-orange-100', textClass: 'text-orange-600' },
   ];
 
   let filtered = orders;
