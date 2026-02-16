@@ -83,6 +83,13 @@ const OrdersMap = () => {
     });
 
     const bounds: L.LatLngExpression[] = [];
+    let pendingGeocode = 0;
+
+    const fitIfReady = () => {
+      if (bounds.length > 0) {
+        map.fitBounds(bounds as L.LatLngBoundsExpression, { padding: [50, 50], maxZoom: 14 });
+      }
+    };
 
     const createMarker = (order: typeof filteredOrders[0], pos: L.LatLngExpression) => {
       const totalCost = (order.laborCost || 0) + (order.materialCost || 0);
@@ -116,24 +123,29 @@ const OrdersMap = () => {
       }
     });
 
-    filteredOrders.forEach(async (order) => {
+    filteredOrders.forEach(order => {
       if (!order.latitude && !order.longitude && order.address) {
-        try {
-          const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(order.address)}&format=json&limit=1`);
-          const data = await res.json();
-          if (data[0]) {
-            const pos: L.LatLngExpression = [parseFloat(data[0].lat), parseFloat(data[0].lon)];
-            createMarker(order, pos);
-            if (map.getZoom() === 4) map.setView(pos, 12);
-          }
-        } catch { /* ignore */ }
+        pendingGeocode++;
+        fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(order.address)}&format=json&limit=1`)
+          .then(res => res.json())
+          .then(data => {
+            if (data[0]) {
+              const pos: L.LatLngExpression = [parseFloat(data[0].lat), parseFloat(data[0].lon)];
+              bounds.push(pos);
+              createMarker(order, pos);
+            }
+          })
+          .catch(() => {})
+          .finally(() => {
+            pendingGeocode--;
+            if (pendingGeocode === 0) fitIfReady();
+          });
       }
     });
 
-    if (bounds.length > 0) {
-      map.fitBounds(bounds as L.LatLngBoundsExpression, { padding: [50, 50], maxZoom: 14 });
-    }
-  }, [filteredOrders]);
+    // Fit immediately for orders with coordinates
+    if (pendingGeocode === 0) fitIfReady();
+  }, [filteredOrders, selectedCity]);
 
   return (
     <div className="space-y-4">
