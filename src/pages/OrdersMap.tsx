@@ -1,5 +1,7 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
 import { useOrders } from '@/contexts/OrderContext';
+import { Card, CardContent } from '@/components/ui/card';
+import { MapPin } from 'lucide-react';
 import { OrderStatus } from '@/types/serviceOrder';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -33,6 +35,24 @@ const OrdersMap = () => {
 
   const allOrders = orders.filter(o => o.address);
   const filteredOrders = allOrders.filter(o => filters[o.status]);
+
+  // Group orders by city (extract city from address)
+  const cityCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    filteredOrders.forEach(order => {
+      if (!order.address) return;
+      // Try to extract city: take the part after last comma or the whole address
+      const parts = order.address.split(',').map(p => p.trim());
+      // Usually city is the second-to-last or last meaningful part
+      let city = parts.length >= 2 ? parts[parts.length - 2] : parts[0];
+      // Remove state abbreviation patterns like "- SP", "- RJ" at end
+      city = city.replace(/\s*-\s*[A-Z]{2}$/, '').trim();
+      if (!city) city = order.address;
+      counts[city] = (counts[city] || 0) + 1;
+    });
+    // Sort by count descending
+    return Object.entries(counts).sort((a, b) => b[1] - a[1]);
+  }, [filteredOrders]);
 
   useEffect(() => {
     if (!mapRef.current || mapInstanceRef.current) return;
@@ -132,6 +152,30 @@ const OrdersMap = () => {
           );
         })}
       </div>
+
+      {/* Cities summary */}
+      {cityCounts.length > 0 && (
+        <Card className="border-0 shadow-sm">
+          <CardContent className="p-4">
+            <p className="text-sm font-bold text-foreground flex items-center gap-2 mb-3">
+              <MapPin className="h-4 w-4" /> Chamados por Cidade
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {cityCounts.map(([city, count]) => (
+                <span
+                  key={city}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-muted text-foreground border border-border"
+                >
+                  {city}
+                  <span className="bg-primary text-primary-foreground rounded-full px-1.5 py-0.5 text-[10px] font-bold min-w-[20px] text-center">
+                    {count}
+                  </span>
+                </span>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <div ref={mapRef} className="w-full h-[calc(100vh-220px)] rounded-xl border shadow-sm z-0" />
     </div>
