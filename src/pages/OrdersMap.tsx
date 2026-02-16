@@ -27,10 +27,51 @@ const OrdersMap = () => {
   const { orders } = useOrders();
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
+  const routeLayerRef = useRef<L.LayerGroup | null>(null);
   const [filters, setFilters] = useState<Record<OrderStatus, boolean>>({
     open: true, quote: true, executing: true, executed: true, closed: true,
   });
   const [selectedCity, setSelectedCity] = useState<string | null>(null);
+  const [routeMode, setRouteMode] = useState(false);
+  const routeModeRef = useRef(false);
+  const [routeInfo, setRouteInfo] = useState<string | null>(null);
+
+  const drawRoute = async (destLat: number, destLng: number, orderId: number) => {
+    const map = mapInstanceRef.current;
+    if (!map || !routeLayerRef.current) return;
+    routeLayerRef.current.clearLayers();
+
+    try {
+      const res = await fetch(
+        `https://router.project-osrm.org/route/v1/driving/${BASE_LOCATION.lng},${BASE_LOCATION.lat};${destLng},${destLat}?overview=full&geometries=geojson`
+      );
+      const data = await res.json();
+      if (data.routes?.[0]) {
+        const coords = data.routes[0].geometry.coordinates.map((c: number[]) => [c[1], c[0]] as L.LatLngExpression);
+        const distKm = (data.routes[0].distance / 1000).toFixed(1);
+        const durationMin = Math.round(data.routes[0].duration / 60);
+
+        const polyline = L.polyline(coords, { color: '#2563eb', weight: 4, opacity: 0.8, dashArray: '8, 8' });
+        routeLayerRef.current!.addLayer(polyline);
+
+        // Midpoint label
+        const mid = coords[Math.floor(coords.length / 2)];
+        const label = L.divIcon({
+          className: 'route-label',
+          html: `<div style="background:white;padding:4px 8px;border-radius:8px;box-shadow:0 2px 6px rgba(0,0,0,0.2);font-size:12px;font-weight:bold;white-space:nowrap;font-family:system-ui;">🚗 ${distKm} km · ~${durationMin} min</div>`,
+          iconSize: [0, 0],
+        });
+        routeLayerRef.current!.addLayer(L.marker(mid, { icon: label, interactive: false }));
+
+        map.fitBounds(polyline.getBounds(), { padding: [60, 60] });
+        setRouteInfo(`🚗 OS #${orderId} — ${distKm} km · ~${durationMin} min`);
+      }
+    } catch {
+      setRouteInfo('Erro ao traçar rota');
+    }
+    routeModeRef.current = false;
+    setRouteMode(false);
+  };
 
   const toggleFilter = (status: OrderStatus) => {
     setFilters(prev => ({ ...prev, [status]: !prev[status] }));
@@ -77,14 +118,24 @@ const OrdersMap = () => {
     // Base marker
     const baseIcon = L.divIcon({
       className: 'custom-marker',
-      html: `<div style="background:#dc2626;width:34px;height:34px;border-radius:50%;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;font-size:16px;">🏠</div>`,
+      html: `<div style="background:#dc2626;width:34px;height:34px;border-radius:50%;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;font-size:16px;cursor:pointer;">🏠</div>`,
       iconSize: [34, 34],
       iconAnchor: [17, 17],
     });
-    L.marker([BASE_LOCATION.lat, BASE_LOCATION.lng], { icon: baseIcon, zIndexOffset: 1000 })
+    const baseMarker = L.marker([BASE_LOCATION.lat, BASE_LOCATION.lng], { icon: baseIcon, zIndexOffset: 1000 })
       .addTo(map)
-      .bindPopup(`<div style="font-family:system-ui;"><strong>🏠 ${BASE_LOCATION.label}</strong><p style="margin:4px 0;font-size:12px;">${BASE_LOCATION.address}</p></div>`);
-    return () => { map.remove(); mapInstanceRef.current = null; };
+      .bindPopup(`<div style="font-family:system-ui;"><strong>🏠 ${BASE_LOCATION.label}</strong><p style="margin:4px 0;font-size:12px;">${BASE_LOCATION.address}</p><p style="margin:4px 0;font-size:11px;color:#2563eb;font-weight:600;">Clique para traçar rota até um atendimento</p></div>`);
+    
+    baseMarker.on('click', () => {
+      routeModeRef.current = true;
+      setRouteMode(true);
+      setRouteInfo('📍 Clique em um ponto de atendimento para traçar a rota');
+      if (routeLayerRef.current) routeLayerRef.current.clearLayers();
+    });
+
+    routeLayerRef.current = L.layerGroup().addTo(map);
+
+    return () => { map.remove(); mapInstanceRef.current = null; routeLayerRef.current = null; };
   }, []);
 
   useEffect(() => {
@@ -125,7 +176,13 @@ const OrdersMap = () => {
         iconSize: [28, 28],
         iconAnchor: [14, 14],
       });
-      L.marker(pos, { icon }).addTo(map).bindPopup(popup);
+      const marker = L.marker(pos, { icon }).addTo(map).bindPopup(popup);
+      marker.on('click', () => {
+        if (routeModeRef.current) {
+          const p = pos as [number, number];
+          drawRoute(p[0], p[1], order.id);
+        }
+      });
     };
 
     filteredOrders.forEach(order => {
@@ -222,6 +279,24 @@ const OrdersMap = () => {
             </div>
           </CardContent>
         </Card>
+      )}
+
+      {/* Route info */}
+      {routeInfo && (
+        <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-muted border border-border text-sm font-medium">
+          <span className="flex-1">{routeInfo}</span>
+          <button
+            onClick={() => {
+              setRouteInfo(null);
+              setRouteMode(false);
+              routeModeRef.current = false;
+              if (routeLayerRef.current) routeLayerRef.current.clearLayers();
+            }}
+            className="text-xs text-destructive font-semibold hover:underline"
+          >
+            Limpar
+          </button>
+        </div>
       )}
 
       <div ref={mapRef} className="w-full h-[calc(100vh-220px)] rounded-xl border shadow-sm z-0" />
