@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Link } from 'react-router-dom';
 import {
   FileText, Circle, Play, CheckCircle2, Lock,
-  Search, Droplets, Zap, Wrench, MapPin, User, Plus
+  Search, Droplets, Zap, Wrench, MapPin, User, Plus, MoreHorizontal
 } from 'lucide-react';
 import { STATUS_LABELS, SERVICE_TYPE_LABELS, OrderStatus, ServiceType } from '@/types/serviceOrder';
 import {
@@ -27,6 +27,7 @@ const serviceTypeIcons: Record<ServiceType, React.ElementType> = {
   hydraulic: Droplets,
   electrical: Zap,
   both: Wrench,
+  other: MoreHorizontal,
 };
 
 const Dashboard = () => {
