@@ -3,6 +3,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { Link2 } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -144,6 +145,26 @@ const Invoices = () => {
 
   return (
     <div className="space-y-6">
+      {/* Quick link */}
+      <Card className="border-0 shadow-sm">
+        <CardContent className="p-4 flex flex-col sm:flex-row items-center gap-3">
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-foreground">Link para o cliente solicitar NF</p>
+            <p className="text-xs text-muted-foreground truncate">{window.location.origin}/invoice-request</p>
+          </div>
+          <Button
+            variant="outline"
+            className="gap-2 shrink-0"
+            onClick={() => {
+              navigator.clipboard.writeText(`${window.location.origin}/invoice-request`);
+              toast({ title: 'Link copiado!' });
+            }}
+          >
+            <Link2 className="h-4 w-4" /> Copiar Link
+          </Button>
+        </CardContent>
+      </Card>
+
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {stats.map(({ label, value, icon: Icon, bgClass, textClass }) => (
