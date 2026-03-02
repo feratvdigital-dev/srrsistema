@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Droplets, Zap, Wrench, MapPin, CheckCircle2, Navigation, User, MoreHorizontal, FileText, ArrowRight } from 'lucide-react';
+import { Droplets, Zap, Wrench, MapPin, CheckCircle2, Navigation, User, MoreHorizontal, FileText, ArrowRight, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 const serviceOptions: { value: ServiceType; label: string; icon: React.ElementType }[] = [
@@ -73,26 +73,37 @@ const NewOrder = () => {
     }
   };
 
+  const [submitting, setSubmitting] = useState(false);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const order = await addOrder({
-      clientName,
-      clientPhone,
-      clientEmail,
-      serviceType,
-      address,
-      description,
-      observation: '',
-      photos: { before: [], during: [], after: [] },
-      laborCost: 0,
-      materialCost: 0,
-      materialDescription: '',
-      assignedTechnician: selectedTechnicians.join(', '),
-      latitude,
-      longitude,
-    });
-    toast({ title: `OS #${order.id} criada com sucesso!` });
-    navigate(`/orders/${order.id}`);
+    if (submitting) return;
+    setSubmitting(true);
+    try {
+      const order = await addOrder({
+        clientName,
+        clientPhone,
+        clientEmail,
+        serviceType,
+        address,
+        description,
+        observation: '',
+        photos: { before: [], during: [], after: [] },
+        laborCost: 0,
+        materialCost: 0,
+        materialDescription: '',
+        assignedTechnician: selectedTechnicians.join(', '),
+        latitude,
+        longitude,
+      });
+      toast({ title: `OS #${order.id} criada com sucesso!` });
+      navigate(`/orders/${order.id}`);
+    } catch (error) {
+      console.error('Erro ao criar OS:', error);
+      toast({ title: 'Erro ao criar ordem de serviço. Tente novamente.', variant: 'destructive' });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -246,8 +257,8 @@ const NewOrder = () => {
           </CardContent>
         </Card>
 
-        <Button type="submit" className="w-full h-14 text-base font-bold rounded-2xl bg-secondary hover:bg-secondary/90 text-secondary-foreground shadow-lg hover:shadow-xl transition-all duration-300 gap-2">
-          Criar Ordem de Serviço <ArrowRight className="h-5 w-5" />
+        <Button type="submit" disabled={submitting} className="w-full h-14 text-base font-bold rounded-2xl bg-secondary hover:bg-secondary/90 text-secondary-foreground shadow-lg hover:shadow-xl transition-all duration-300 gap-2">
+          {submitting ? <><Loader2 className="h-5 w-5 animate-spin" /> Criando...</> : <>Criar Ordem de Serviço <ArrowRight className="h-5 w-5" /></>}
         </Button>
       </form>
     </div>

@@ -65,6 +65,8 @@ const OrderDetail = () => {
   const [showRejectForm, setShowRejectForm] = useState(false);
   const [uploadingPhase, setUploadingPhase] = useState<string | null>(null);
   const [editingClosed, setEditingClosed] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [changingStatus, setChangingStatus] = useState(false);
 
   if (!order) {
     return (
@@ -98,34 +100,52 @@ const OrderDetail = () => {
   };
 
   const handleSave = async () => {
-    await updateOrder(order.id, {
-      observation,
-      laborCost: parseFloat(laborCost) || 0,
-      materialCost: parseFloat(materialCost) || 0,
-      materialDescription,
-      assignedTechnician,
-      address,
-    });
-    toast({ title: 'Alterações salvas!' });
+    if (saving) return;
+    setSaving(true);
+    try {
+      await updateOrder(order.id, {
+        observation,
+        laborCost: parseFloat(laborCost) || 0,
+        materialCost: parseFloat(materialCost) || 0,
+        materialDescription,
+        assignedTechnician,
+        address,
+      });
+      toast({ title: 'Alterações salvas!' });
+    } catch (error) {
+      console.error('Erro ao salvar:', error);
+      toast({ title: 'Erro ao salvar alterações. Tente novamente.', variant: 'destructive' });
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleStatusChange = async (status: OrderStatus) => {
-    const updates: Partial<typeof order> = {
-      status,
-      observation,
-      laborCost: parseFloat(laborCost) || 0,
-      materialCost: parseFloat(materialCost) || 0,
-      materialDescription,
-      assignedTechnician,
-      address,
-    };
-    if (status === 'executed') updates.executedAt = new Date().toISOString();
-    if (status === 'closed') {
-      updates.closedAt = new Date().toISOString();
+    if (changingStatus) return;
+    setChangingStatus(true);
+    try {
+      const updates: Partial<typeof order> = {
+        status,
+        observation,
+        laborCost: parseFloat(laborCost) || 0,
+        materialCost: parseFloat(materialCost) || 0,
+        materialDescription,
+        assignedTechnician,
+        address,
+      };
+      if (status === 'executed') updates.executedAt = new Date().toISOString();
+      if (status === 'closed') {
+        updates.closedAt = new Date().toISOString();
+      }
+      await updateOrder(order.id, updates);
+      toast({ title: `OS #${order.id} - ${STATUS_LABELS[status]}` });
+      if (status === 'closed') generatePDF({ ...order, ...updates } as typeof order);
+    } catch (error) {
+      console.error('Erro ao mudar status:', error);
+      toast({ title: 'Erro ao atualizar status. Tente novamente.', variant: 'destructive' });
+    } finally {
+      setChangingStatus(false);
     }
-    await updateOrder(order.id, updates);
-    toast({ title: `OS #${order.id} - ${STATUS_LABELS[status]}` });
-    if (status === 'closed') generatePDF({ ...order, ...updates } as typeof order);
   };
 
   const config = statusConfig[order.status];
@@ -451,21 +471,21 @@ const OrderDetail = () => {
         <div className="space-y-3 pb-8">
           {order.status === 'open' && (
             <>
-              <Button onClick={handleSave} className="w-full h-12 rounded-xl bg-secondary hover:bg-secondary/90 text-secondary-foreground gap-2 font-semibold shadow-sm hover:shadow-md transition-all">
-                <Save className="h-5 w-5" /> Salvar Alterações
+               <Button onClick={handleSave} disabled={saving} className="w-full h-12 rounded-xl bg-secondary hover:bg-secondary/90 text-secondary-foreground gap-2 font-semibold shadow-sm hover:shadow-md transition-all">
+                {saving ? <Loader2 className="h-5 w-5 animate-spin" /> : <Save className="h-5 w-5" />} {saving ? 'Salvando...' : 'Salvar Alterações'}
               </Button>
-              <Button onClick={() => handleStatusChange('quote')} className="w-full h-12 rounded-xl bg-gradient-to-r from-purple-500 to-violet-600 hover:from-purple-600 hover:to-violet-700 text-white gap-2 font-semibold shadow-lg shadow-purple-200/50 hover:shadow-xl transition-all">
-                <FileText className="h-5 w-5" /> Enviar Orçamento
+               <Button disabled={changingStatus} onClick={() => handleStatusChange('quote')} className="w-full h-12 rounded-xl bg-gradient-to-r from-purple-500 to-violet-600 hover:from-purple-600 hover:to-violet-700 text-white gap-2 font-semibold shadow-lg shadow-purple-200/50 hover:shadow-xl transition-all">
+                {changingStatus ? <Loader2 className="h-5 w-5 animate-spin" /> : <FileText className="h-5 w-5" />} Enviar Orçamento
               </Button>
             </>
           )}
           {order.status === 'quote' && (
             <>
-              <Button onClick={handleSave} className="w-full h-12 rounded-xl bg-secondary hover:bg-secondary/90 text-secondary-foreground gap-2 font-semibold shadow-sm hover:shadow-md transition-all">
-                <Save className="h-5 w-5" /> Salvar Alterações
+               <Button onClick={handleSave} disabled={saving} className="w-full h-12 rounded-xl bg-secondary hover:bg-secondary/90 text-secondary-foreground gap-2 font-semibold shadow-sm hover:shadow-md transition-all">
+                {saving ? <Loader2 className="h-5 w-5 animate-spin" /> : <Save className="h-5 w-5" />} {saving ? 'Salvando...' : 'Salvar Alterações'}
               </Button>
-              <Button onClick={() => handleStatusChange('executing')} className="w-full h-12 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white gap-2 font-semibold shadow-lg shadow-blue-200/50 hover:shadow-xl transition-all">
-                <CheckCircle2 className="h-5 w-5" /> Cliente Aprovou - Iniciar Serviço
+              <Button disabled={changingStatus} onClick={() => handleStatusChange('executing')} className="w-full h-12 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white gap-2 font-semibold shadow-lg shadow-blue-200/50 hover:shadow-xl transition-all">
+                {changingStatus ? <Loader2 className="h-5 w-5 animate-spin" /> : <CheckCircle2 className="h-5 w-5" />} Cliente Aprovou - Iniciar Serviço
               </Button>
               {!showRejectForm ? (
                 <Button onClick={() => setShowRejectForm(true)} variant="outline" className="w-full h-12 rounded-xl border-destructive text-destructive hover:bg-destructive/10 gap-2 font-semibold transition-all">
@@ -492,17 +512,26 @@ const OrderDetail = () => {
                       />
                     </div>
                     <Button
+                      disabled={changingStatus}
                       onClick={async () => {
-                        const cost = parseFloat(visitCost) || 0;
-                        await updateOrder(order.id, {
-                          status: 'closed',
-                          laborCost: cost,
-                          materialCost: 0,
-                          observation: observation ? `${observation}\n\nOrçamento recusado pelo cliente.` : 'Orçamento recusado pelo cliente.',
-                          closedAt: new Date().toISOString(),
-                        });
-                        toast({ title: `OS #${order.id} encerrada - Orçamento recusado` });
-                        generatePDF({ ...order, status: 'closed', laborCost: cost, materialCost: 0, closedAt: new Date().toISOString() } as typeof order);
+                        setChangingStatus(true);
+                        try {
+                          const cost = parseFloat(visitCost) || 0;
+                          await updateOrder(order.id, {
+                            status: 'closed',
+                            laborCost: cost,
+                            materialCost: 0,
+                            observation: observation ? `${observation}\n\nOrçamento recusado pelo cliente.` : 'Orçamento recusado pelo cliente.',
+                            closedAt: new Date().toISOString(),
+                          });
+                          toast({ title: `OS #${order.id} encerrada - Orçamento recusado` });
+                          generatePDF({ ...order, status: 'closed', laborCost: cost, materialCost: 0, closedAt: new Date().toISOString() } as typeof order);
+                        } catch (error) {
+                          console.error('Erro ao encerrar OS:', error);
+                          toast({ title: 'Erro ao encerrar OS. Tente novamente.', variant: 'destructive' });
+                        } finally {
+                          setChangingStatus(false);
+                        }
                       }}
                       className="w-full rounded-xl bg-destructive hover:bg-destructive/90 text-destructive-foreground gap-2 font-semibold"
                     >
@@ -516,23 +545,23 @@ const OrderDetail = () => {
               )}
             </>
           )}
-          {order.status === 'executing' && (
+           {order.status === 'executing' && (
             <>
-              <Button onClick={handleSave} className="w-full h-12 rounded-xl bg-secondary hover:bg-secondary/90 text-secondary-foreground gap-2 font-semibold shadow-sm hover:shadow-md transition-all">
-                <Save className="h-5 w-5" /> Salvar Alterações
+              <Button onClick={handleSave} disabled={saving} className="w-full h-12 rounded-xl bg-secondary hover:bg-secondary/90 text-secondary-foreground gap-2 font-semibold shadow-sm hover:shadow-md transition-all">
+                {saving ? <Loader2 className="h-5 w-5 animate-spin" /> : <Save className="h-5 w-5" />} {saving ? 'Salvando...' : 'Salvar Alterações'}
               </Button>
-              <Button onClick={() => handleStatusChange('executed')} className="w-full h-12 rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white gap-2 font-semibold shadow-lg shadow-emerald-200/50 hover:shadow-xl transition-all">
-                <CheckCircle2 className="h-5 w-5" /> Marcar como Executado
+              <Button disabled={changingStatus} onClick={() => handleStatusChange('executed')} className="w-full h-12 rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white gap-2 font-semibold shadow-lg shadow-emerald-200/50 hover:shadow-xl transition-all">
+                {changingStatus ? <Loader2 className="h-5 w-5 animate-spin" /> : <CheckCircle2 className="h-5 w-5" />} Marcar como Executado
               </Button>
             </>
           )}
           {order.status === 'executed' && (
             <>
-              <Button onClick={handleSave} className="w-full h-12 rounded-xl bg-secondary hover:bg-secondary/90 text-secondary-foreground gap-2 font-semibold shadow-sm hover:shadow-md transition-all">
-                <Save className="h-5 w-5" /> Salvar Alterações
+              <Button onClick={handleSave} disabled={saving} className="w-full h-12 rounded-xl bg-secondary hover:bg-secondary/90 text-secondary-foreground gap-2 font-semibold shadow-sm hover:shadow-md transition-all">
+                {saving ? <Loader2 className="h-5 w-5 animate-spin" /> : <Save className="h-5 w-5" />} {saving ? 'Salvando...' : 'Salvar Alterações'}
               </Button>
-              <Button onClick={() => handleStatusChange('closed')} className="w-full h-12 rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white gap-2 font-semibold shadow-lg shadow-emerald-200/50 hover:shadow-xl transition-all">
-                <Lock className="h-5 w-5" /> Encerrar OS
+              <Button disabled={changingStatus} onClick={() => handleStatusChange('closed')} className="w-full h-12 rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white gap-2 font-semibold shadow-lg shadow-emerald-200/50 hover:shadow-xl transition-all">
+                {changingStatus ? <Loader2 className="h-5 w-5 animate-spin" /> : <Lock className="h-5 w-5" />} Encerrar OS
               </Button>
             </>
           )}
