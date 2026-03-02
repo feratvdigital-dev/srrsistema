@@ -16,6 +16,8 @@ const InvoiceRequest = () => {
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [address, setAddress] = useState('');
+  const [houseNumber, setHouseNumber] = useState('');
+  const [complement, setComplement] = useState('');
   const [cep, setCep] = useState('');
   const [city, setCity] = useState('');
   const [submitted, setSubmitted] = useState(false);
@@ -25,16 +27,18 @@ const InvoiceRequest = () => {
     e.preventDefault();
     const trimmedName = fullName.trim(); const trimmedCpf = cpf.trim();
     const trimmedEmail = email.trim(); const trimmedPhone = phone.trim();
-    const trimmedAddress = address.trim(); const trimmedCep = cep.trim(); const trimmedCity = city.trim();
+    const trimmedAddress = address.trim(); const trimmedNumber = houseNumber.trim(); const trimmedComplement = complement.trim(); const trimmedCep = cep.trim(); const trimmedCity = city.trim();
     if (!trimmedName || trimmedName.length > 200) { toast({ title: 'Nome inválido (máx 200 caracteres)', variant: 'destructive' }); return; }
     if (!trimmedCpf || trimmedCpf.length > 20) { toast({ title: 'CPF inválido', variant: 'destructive' }); return; }
     if (!trimmedEmail || trimmedEmail.length > 255) { toast({ title: 'E-mail inválido', variant: 'destructive' }); return; }
     if (!trimmedPhone || trimmedPhone.length > 20) { toast({ title: 'Telefone inválido', variant: 'destructive' }); return; }
     if (!trimmedAddress || trimmedAddress.length > 500) { toast({ title: 'Endereço inválido (máx 500 caracteres)', variant: 'destructive' }); return; }
+    if (!trimmedNumber || trimmedNumber.length > 20) { toast({ title: 'Número inválido', variant: 'destructive' }); return; }
     if (!trimmedCep || trimmedCep.length > 15) { toast({ title: 'CEP inválido', variant: 'destructive' }); return; }
     if (!trimmedCity || trimmedCity.length > 100) { toast({ title: 'Cidade inválida', variant: 'destructive' }); return; }
     const id = `NF${Date.now()}`;
-    const { error } = await supabase.from('invoice_requests').insert({ id, full_name: trimmedName, cpf: trimmedCpf, email: trimmedEmail, phone: trimmedPhone, address: trimmedAddress, cep: trimmedCep, city: trimmedCity });
+    const fullAddress = `${trimmedAddress}, ${trimmedNumber}${trimmedComplement ? ` - ${trimmedComplement}` : ''}`;
+    const { error } = await supabase.from('invoice_requests').insert({ id, full_name: trimmedName, cpf: trimmedCpf, email: trimmedEmail, phone: trimmedPhone, address: fullAddress, cep: trimmedCep, city: trimmedCity });
     if (error) { toast({ title: 'Erro ao enviar solicitação. Tente novamente.', variant: 'destructive' }); return; }
     setRequestId(id); setSubmitted(true);
     toast({ title: 'Solicitação enviada com sucesso!' });
@@ -56,7 +60,7 @@ const InvoiceRequest = () => {
                 <Search className="h-5 w-5" /> Acompanhar Nota Fiscal
               </Button>
             </a>
-            <Button onClick={() => { setSubmitted(false); setFullName(''); setCpf(''); setEmail(''); setPhone(''); setAddress(''); setCep(''); setCity(''); }} variant="outline" className="w-full rounded-xl">
+            <Button onClick={() => { setSubmitted(false); setFullName(''); setCpf(''); setEmail(''); setPhone(''); setAddress(''); setHouseNumber(''); setComplement(''); setCep(''); setCity(''); }} variant="outline" className="w-full rounded-xl">
               Enviar Outra Solicitação
             </Button>
           </CardContent>
@@ -98,7 +102,11 @@ const InvoiceRequest = () => {
             <div className="h-1 bg-gradient-to-r from-secondary to-secondary/50" />
             <CardHeader><CardTitle className="text-base">Endereço Completo</CardTitle></CardHeader>
             <CardContent className="space-y-3">
-              <div className="space-y-1"><Label>Endereço *</Label><Input value={address} onChange={e => setAddress(e.target.value)} placeholder="Rua, número, complemento, bairro" required className="rounded-xl" /></div>
+              <div className="space-y-1"><Label>Rua / Logradouro *</Label><Input value={address} onChange={e => setAddress(e.target.value)} placeholder="Rua, Avenida, Travessa..." required className="rounded-xl" /></div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1"><Label>Número *</Label><Input value={houseNumber} onChange={e => setHouseNumber(e.target.value)} placeholder="Nº da casa" required className="rounded-xl" /></div>
+                <div className="space-y-1"><Label>Complemento</Label><Input value={complement} onChange={e => setComplement(e.target.value)} placeholder="Apto, Bloco..." className="rounded-xl" /></div>
+              </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1"><Label>CEP *</Label><Input value={cep} onChange={e => setCep(e.target.value)} placeholder="00000-000" required className="rounded-xl" /></div>
                 <div className="space-y-1"><Label>Cidade *</Label><Input value={city} onChange={e => setCity(e.target.value)} placeholder="Sua cidade" required className="rounded-xl" /></div>
