@@ -95,7 +95,7 @@ const InvoiceTrack = () => {
                   <FileText className="h-8 w-8 text-primary opacity-60" />
                 </div>
                 <h2 className="text-lg font-extrabold">Consulte sua Nota Fiscal</h2>
-                <p className="text-sm text-muted-foreground">Digite seu WhatsApp para consultar</p>
+                <p className="text-sm text-muted-foreground">Digite o mesmo WhatsApp informado na abertura da solicitação</p>
               </div>
               <div className="flex gap-2">
                 <Input value={searchValue} onChange={e => setSearchValue(e.target.value)} placeholder="(11) 99999-9999" className="flex-1 rounded-xl h-12" />
