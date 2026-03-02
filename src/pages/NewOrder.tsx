@@ -10,13 +10,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Droplets, Zap, Wrench, MapPin, CheckCircle2, Navigation, User } from 'lucide-react';
+import { Droplets, Zap, Wrench, MapPin, CheckCircle2, Navigation, User, MoreHorizontal } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 const serviceOptions: { value: ServiceType; label: string; icon: React.ElementType }[] = [
   { value: 'hydraulic', label: 'Hidráulica', icon: Droplets },
   { value: 'electrical', label: 'Elétrica', icon: Zap },
   { value: 'both', label: 'Ambos', icon: Wrench },
+  { value: 'other', label: 'Outros', icon: MoreHorizontal },
 ];
 
 const NewOrder = () => {
@@ -101,7 +102,7 @@ const NewOrder = () => {
         <Card className="border-0 shadow-sm">
           <CardHeader><CardTitle className="text-base">Tipo de Serviço *</CardTitle></CardHeader>
           <CardContent>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {serviceOptions.map(({ value, label, icon: Icon }) => (
                 <button
                   type="button"

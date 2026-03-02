@@ -12,7 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Camera, Download, ArrowLeft, MapPin, Clock, ExternalLink,
-  Droplets, Zap, Wrench, Circle, Play, CheckCircle2, Lock,
+  Droplets, Zap, Wrench, Circle, Play, CheckCircle2, Lock, MoreHorizontal,
   Save, Image as ImageIcon, PenTool, User, Trash2, Loader2,
   FileText, XCircle, DollarSign
 } from 'lucide-react';
@@ -25,6 +25,7 @@ const serviceTypeIcons: Record<ServiceType, React.ElementType> = {
   hydraulic: Droplets,
   electrical: Zap,
   both: Wrench,
+  other: MoreHorizontal,
 };
 
 const statusConfig: Record<OrderStatus, { icon: React.ElementType; bgClass: string; textClass: string }> = {
