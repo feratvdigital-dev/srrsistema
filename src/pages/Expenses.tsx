@@ -154,7 +154,7 @@ const Expenses = () => {
                   <SelectTrigger className="rounded-xl"><SelectValue placeholder="Selecione a OS..." /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none">Nenhuma</SelectItem>
-                    {orders.filter(o => o.status !== 'closed').map(o => (
+                    {orders.map(o => (
                       <SelectItem key={o.id} value={String(o.id)}>OS #{o.id} - {o.clientName}</SelectItem>
                     ))}
                   </SelectContent>
