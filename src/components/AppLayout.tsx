@@ -59,6 +59,8 @@ const AppLayout = () => {
     if (location.pathname === '/reports') return { title: 'Relatórios', subtitle: 'Análise de desempenho' };
     if (location.pathname === '/tickets') return { title: 'Chamados', subtitle: 'Solicitações de clientes' };
     if (location.pathname === '/map') return { title: 'Mapa', subtitle: 'Localização das OS' };
+    if (location.pathname === '/invoices') return { title: 'Notas Fiscais', subtitle: 'Solicitações de NF' };
+    if (location.pathname === '/expenses') return { title: 'Despesas', subtitle: 'Controle financeiro' };
     return { title: 'SR Resolve', subtitle: '' };
   };
 
@@ -256,6 +258,16 @@ const AppLayout = () => {
                       </Link>
                     </TooltipTrigger>
                     <TooltipContent>Relatórios</TooltipContent>
+                  </Tooltip>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Link to="/invoices" className="hidden sm:block">
+                        <button className="p-2 rounded-lg hover:bg-white/10 transition-colors">
+                          <FileText className="h-5 w-5" />
+                        </button>
+                      </Link>
+                    </TooltipTrigger>
+                    <TooltipContent>Notas Fiscais</TooltipContent>
                   </Tooltip>
                   <Link to="/orders/new" className="hidden sm:block">
                     <Button size="sm" className="bg-secondary hover:bg-secondary/90 text-secondary-foreground ml-2 gap-1 font-semibold text-sm h-9 px-3">
