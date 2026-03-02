@@ -246,17 +246,17 @@ const Invoices = () => {
                     </div>
                     <label className="block">
                       <Button variant="outline" size="sm" className="gap-1 text-xs w-full rounded-xl" disabled={uploading} asChild><span><Upload className="h-3 w-3" /> {uploading ? 'Enviando...' : 'Substituir Arquivo'}</span></Button>
-                      <input type="file" accept="image/*,.pdf" className="hidden" onChange={e => { handleUploadInvoice(selected.id, e.target.files); e.target.value = ''; }} disabled={uploading} />
+                      <input type="file" accept=".pdf,application/pdf" className="hidden" onChange={e => { handleUploadInvoice(selected.id, e.target.files); e.target.value = ''; }} disabled={uploading} />
                     </label>
                   </div>
                 ) : (
                   <label className="block">
                     <div className="border-2 border-dashed border-border rounded-xl p-6 text-center cursor-pointer hover:border-primary transition-colors">
                       {uploading ? <Loader2 className="h-8 w-8 mx-auto animate-spin text-muted-foreground" /> : (
-                        <><Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" /><p className="text-sm text-muted-foreground">Clique para enviar a NF</p><p className="text-xs text-muted-foreground">PDF ou imagem</p></>
+                        <><Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" /><p className="text-sm text-muted-foreground">Clique para enviar a NF</p><p className="text-xs text-muted-foreground">Apenas PDF</p></>
                       )}
                     </div>
-                    <input type="file" accept="image/*,.pdf" className="hidden" onChange={e => { handleUploadInvoice(selected.id, e.target.files); e.target.value = ''; }} disabled={uploading} />
+                    <input type="file" accept=".pdf,application/pdf" className="hidden" onChange={e => { handleUploadInvoice(selected.id, e.target.files); e.target.value = ''; }} disabled={uploading} />
                   </label>
                 )}
               </div>

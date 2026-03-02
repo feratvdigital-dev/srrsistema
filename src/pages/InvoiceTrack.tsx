@@ -195,7 +195,7 @@ const InvoiceTrack = () => {
                     <p className="font-bold text-green-700">Nota Fiscal Disponível!</p>
                   </div>
                   <p className="text-sm text-muted-foreground">Sua nota fiscal foi emitida e está pronta para download.</p>
-                  <a href={requestToShow.invoiceFileUrl} target="_blank" rel="noopener noreferrer">
+                  <a href={requestToShow.invoiceFileUrl} download="nota-fiscal.pdf">
                     <Button className="w-full gap-2 bg-green-600 hover:bg-green-700 text-white rounded-2xl h-12 font-bold shadow-lg"><Download className="h-4 w-4" /> Baixar Nota Fiscal</Button>
                   </a>
                 </CardContent>
