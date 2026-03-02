@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { CheckCircle2, Send, Search, FileText } from 'lucide-react';
+import { CheckCircle2, Send, Search, FileText, PlusCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import logo from '@/assets/logo.png';
 import logoItDigital from '@/assets/logo-itdigital.png';
@@ -11,6 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 const InvoiceRequest = () => {
   const { toast } = useToast();
+  const [view, setView] = useState<'menu' | 'form' | 'submitted'>('menu');
   const [fullName, setFullName] = useState('');
   const [cpf, setCpf] = useState('');
   const [email, setEmail] = useState('');
@@ -20,7 +21,6 @@ const InvoiceRequest = () => {
   const [complement, setComplement] = useState('');
   const [cep, setCep] = useState('');
   const [city, setCity] = useState('');
-  const [submitted, setSubmitted] = useState(false);
   const [requestId, setRequestId] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -40,11 +40,56 @@ const InvoiceRequest = () => {
     const fullAddress = `${trimmedAddress}, ${trimmedNumber}${trimmedComplement ? ` - ${trimmedComplement}` : ''}`;
     const { error } = await supabase.from('invoice_requests').insert({ id, full_name: trimmedName, cpf: trimmedCpf, email: trimmedEmail, phone: trimmedPhone, address: fullAddress, cep: trimmedCep, city: trimmedCity });
     if (error) { toast({ title: 'Erro ao enviar solicitação. Tente novamente.', variant: 'destructive' }); return; }
-    setRequestId(id); setSubmitted(true);
+    setRequestId(id); setView('submitted');
     toast({ title: 'Solicitação enviada com sucesso!' });
   };
 
-  if (submitted) {
+  // Tela inicial com 2 botões
+  if (view === 'menu') {
+    return (
+      <div className="min-h-screen flex flex-col" style={{ background: 'linear-gradient(135deg, hsl(215 40% 12%), hsl(215 40% 20%))' }}>
+        <header className="px-6 pt-8 pb-4 flex justify-center">
+          <img src={logo} alt="SR Resolve" className="h-14 w-auto drop-shadow-lg" />
+        </header>
+
+        <div className="flex-1 flex items-center justify-center px-4 pb-8">
+          <div className="max-w-sm w-full space-y-5">
+            <div className="text-center space-y-2">
+              <h1 className="text-2xl font-extrabold text-white">Nota Fiscal</h1>
+              <p className="text-sm text-white/60">O que deseja fazer?</p>
+            </div>
+
+            <Button
+              onClick={() => setView('form')}
+              className="w-full h-16 text-base font-bold bg-green-600 hover:bg-green-700 text-white gap-3 rounded-2xl shadow-lg hover:shadow-xl transition-all"
+            >
+              <PlusCircle className="h-6 w-6" />
+              Solicitar Nota Fiscal
+            </Button>
+
+            <a href="/invoice-track" className="block">
+              <Button
+                variant="outline"
+                className="w-full h-16 text-base font-bold border-white/20 text-white hover:bg-white/10 gap-3 rounded-2xl shadow-lg hover:shadow-xl transition-all"
+              >
+                <Search className="h-6 w-6" />
+                Acompanhar Nota Fiscal
+              </Button>
+            </a>
+          </div>
+        </div>
+
+        <footer className="py-4 text-center flex items-center justify-center gap-2">
+          <span className="text-xs text-white/40">© 2026</span>
+          <img src={logoItDigital} alt="IT Digital" className="h-5 w-auto opacity-40" />
+          <span className="text-xs text-white/40">IT Digital. Todos os direitos reservados.</span>
+        </footer>
+      </div>
+    );
+  }
+
+  // Tela de sucesso
+  if (view === 'submitted') {
     return (
       <div className="min-h-screen flex items-center justify-center p-4" style={{ background: 'linear-gradient(135deg, hsl(215 40% 12%), hsl(215 40% 20%))' }}>
         <Card className="max-w-md w-full border-0 shadow-2xl overflow-hidden">
@@ -60,8 +105,8 @@ const InvoiceRequest = () => {
                 <Search className="h-5 w-5" /> Acompanhar Nota Fiscal
               </Button>
             </a>
-            <Button onClick={() => { setSubmitted(false); setFullName(''); setCpf(''); setEmail(''); setPhone(''); setAddress(''); setHouseNumber(''); setComplement(''); setCep(''); setCity(''); }} variant="outline" className="w-full rounded-xl">
-              Enviar Outra Solicitação
+            <Button onClick={() => { setView('menu'); setFullName(''); setCpf(''); setEmail(''); setPhone(''); setAddress(''); setHouseNumber(''); setComplement(''); setCep(''); setCity(''); }} variant="outline" className="w-full rounded-xl">
+              Voltar ao Início
             </Button>
           </CardContent>
         </Card>
@@ -69,15 +114,18 @@ const InvoiceRequest = () => {
     );
   }
 
+  // Formulário
   return (
     <div className="min-h-screen bg-background">
       <header className="app-header sticky top-0 z-50 shadow-lg">
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center gap-3">
-          <img src={logo} alt="SR Resolve" className="h-9 w-auto" />
-          <div>
-            <h1 className="font-bold text-sm">Solicitar Nota Fiscal</h1>
-            <p className="text-xs opacity-60">Preencha seus dados</p>
-          </div>
+          <button onClick={() => setView('menu')} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+            <img src={logo} alt="SR Resolve" className="h-9 w-auto" />
+            <div>
+              <h1 className="font-bold text-sm">Solicitar Nota Fiscal</h1>
+              <p className="text-xs opacity-60">Preencha seus dados</p>
+            </div>
+          </button>
         </div>
       </header>
 
