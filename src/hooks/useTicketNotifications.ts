@@ -5,6 +5,7 @@ const NOTIFICATION_SOUND_URL = 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAA
 
 export function useTicketNotifications() {
   const [pendingTickets, setPendingTickets] = useState<any[]>([]);
+  const [pendingInvoices, setPendingInvoices] = useState<any[]>([]);
   const prevCountRef = useRef<number | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -53,6 +54,15 @@ export function useTicketNotifications() {
     return data || [];
   }, []);
 
+  const fetchPendingInvoices = useCallback(async () => {
+    const { data } = await supabase
+      .from('invoice_requests')
+      .select('*')
+      .eq('status', 'pending')
+      .order('created_at', { ascending: false });
+    return data || [];
+  }, []);
+
   useEffect(() => {
     requestNotificationPermission();
 
@@ -61,6 +71,7 @@ export function useTicketNotifications() {
       setPendingTickets(tickets);
       prevCountRef.current = tickets.length;
     });
+    fetchPendingInvoices().then(setPendingInvoices);
 
     // Realtime listener for new tickets
     const channel = supabase
@@ -81,8 +92,32 @@ export function useTicketNotifications() {
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'client_tickets' },
         () => {
-          // Refresh the list when a ticket is updated (e.g., accepted)
           fetchPendingTickets().then(setPendingTickets);
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'invoice_requests' },
+        (payload) => {
+          const newInvoice = payload.new;
+          if (newInvoice.status === 'pending') {
+            playNotificationSound();
+            if ('Notification' in window && Notification.permission === 'granted') {
+              new Notification('📄 Nova Solicitação de NF', {
+                body: `${newInvoice.full_name} — CPF: ${newInvoice.cpf}`,
+                icon: '/favicon.ico',
+                tag: `invoice-${newInvoice.id}`,
+              });
+            }
+            setPendingInvoices(prev => [newInvoice, ...prev]);
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'invoice_requests' },
+        () => {
+          fetchPendingInvoices().then(setPendingInvoices);
         }
       )
       .subscribe();
@@ -90,7 +125,7 @@ export function useTicketNotifications() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [fetchPendingTickets, playNotificationSound, showBrowserNotification, requestNotificationPermission]);
+  }, [fetchPendingTickets, fetchPendingInvoices, playNotificationSound, showBrowserNotification, requestNotificationPermission]);
 
-  return { pendingTickets };
+  return { pendingTickets, pendingInvoices };
 }

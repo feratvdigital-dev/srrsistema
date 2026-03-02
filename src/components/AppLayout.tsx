@@ -36,7 +36,7 @@ const AppLayout = () => {
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   };
 
-  const { pendingTickets: pendingTicketsList } = useTicketNotifications();
+  const { pendingTickets: pendingTicketsList, pendingInvoices: pendingInvoicesList } = useTicketNotifications();
   const [bellRead, setBellRead] = useState(false);
 
   const recentOrdersList = useMemo(() => orders.filter(o => {
@@ -44,7 +44,7 @@ const AppLayout = () => {
     return Date.now() - created < 24 * 60 * 60 * 1000 && o.status === 'open';
   }), [orders]);
 
-  const notificationCount = pendingTicketsList.length + recentOrdersList.length;
+  const notificationCount = pendingTicketsList.length + recentOrdersList.length + pendingInvoicesList.length;
   const pendingTickets = pendingTicketsList.length;
 
   if (!isAuthenticated) return <Navigate to="/login" replace />;
@@ -220,6 +220,12 @@ const AppLayout = () => {
                               <Link key={o.id} to={`/orders/${o.id}`} className="block px-4 py-3 hover:bg-muted/50 transition-colors">
                                 <p className="text-sm font-medium">🔧 Nova OS #{o.id}</p>
                                 <p className="text-xs text-muted-foreground">{o.clientName} — {o.address?.substring(0, 40)}</p>
+                              </Link>
+                            ))}
+                            {pendingInvoicesList.map(inv => (
+                              <Link key={inv.id} to="/invoices" className="block px-4 py-3 hover:bg-muted/50 transition-colors">
+                                <p className="text-sm font-medium">📄 Solicitação de NF</p>
+                                <p className="text-xs text-muted-foreground">{inv.full_name} — CPF: {inv.cpf}</p>
                               </Link>
                             ))}
                           </div>
