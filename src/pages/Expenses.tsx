@@ -45,6 +45,7 @@ const Expenses = () => {
   const [category, setCategory] = useState('food');
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
+  const [expenseDate, setExpenseDate] = useState<Date>(new Date());
   const [filterCategory, setFilterCategory] = useState<string>('all');
 
   // Date filters
@@ -85,6 +86,7 @@ const Expenses = () => {
       category,
       description: description.trim(),
       amount: parseFloat(amount) || 0,
+      created_at: expenseDate.toISOString(),
     });
     if (error) {
       toast({ title: 'Erro ao salvar', variant: 'destructive' });
@@ -94,6 +96,7 @@ const Expenses = () => {
     setDescription('');
     setAmount('');
     setCategory('food');
+    setExpenseDate(new Date());
     setOpen(false);
   };
 
@@ -206,6 +209,27 @@ const Expenses = () => {
             <div className="space-y-2">
               <Label>Valor (R$) *</Label>
               <Input type="number" inputMode="numeric" step="0.01" min="0" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0,00" />
+            </div>
+            <div className="space-y-2">
+              <Label>Data</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className={cn("w-full justify-start text-left font-normal")}>
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {format(expenseDate, "dd/MM/yyyy")}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={expenseDate}
+                    onSelect={(d) => d && setExpenseDate(d)}
+                    initialFocus
+                    locale={ptBR}
+                    className={cn("p-3 pointer-events-auto")}
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
             <Button onClick={handleSubmit} className="w-full" disabled={!description.trim() || !amount}>
               Registrar Despesa
