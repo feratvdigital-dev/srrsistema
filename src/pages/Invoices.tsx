@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
-  FileText, Clock, CheckCircle2, Loader2, Search, Eye, Upload, Copy, ExternalLink
+  FileText, Clock, CheckCircle2, Loader2, Search, Eye, Upload, Copy, ExternalLink, Trash2
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -83,6 +83,14 @@ const Invoices = () => {
     } catch (err: any) {
       toast({ title: err?.message || 'Erro ao enviar arquivo', variant: 'destructive' });
     } finally { setUploading(false); }
+  };
+
+  const deleteRequest = async (id: string) => {
+    if (!confirm('Tem certeza que deseja excluir esta solicitação?')) return;
+    const { error } = await supabase.from('invoice_requests').delete().eq('id', id);
+    if (error) { toast({ title: 'Erro ao excluir', variant: 'destructive' }); return; }
+    toast({ title: 'Solicitação excluída com sucesso!' });
+    if (selected?.id === id) setSelected(null);
   };
 
   const copyLink = (id: string) => {
@@ -184,6 +192,7 @@ const Invoices = () => {
                   <div className="flex gap-2">
                     <Button size="sm" variant="outline" className="flex-1 gap-1 text-xs rounded-xl" onClick={() => setSelected(req)}><Eye className="h-3 w-3" /> Ver</Button>
                     <Button size="sm" variant="outline" className="gap-1 text-xs rounded-xl" onClick={() => copyLink(req.id)}><Copy className="h-3 w-3" /></Button>
+                    <Button size="sm" variant="outline" className="gap-1 text-xs rounded-xl text-destructive hover:bg-destructive hover:text-destructive-foreground" onClick={() => deleteRequest(req.id)}><Trash2 className="h-3 w-3" /></Button>
                   </div>
                 </CardContent>
               </Card>
@@ -252,6 +261,7 @@ const Invoices = () => {
                 )}
               </div>
               <Button variant="outline" className="w-full gap-2 rounded-xl" onClick={() => copyLink(selected.id)}><Copy className="h-4 w-4" /> Copiar Link de Acompanhamento</Button>
+              <Button variant="outline" className="w-full gap-2 rounded-xl text-destructive hover:bg-destructive hover:text-destructive-foreground" onClick={() => deleteRequest(selected.id)}><Trash2 className="h-4 w-4" /> Excluir Solicitação</Button>
             </div>
           )}
         </DialogContent>
