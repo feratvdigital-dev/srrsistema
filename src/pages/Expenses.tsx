@@ -17,7 +17,7 @@ import { format, startOfMonth, endOfMonth, startOfYear, endOfYear, startOfDay, e
 import { ptBR } from 'date-fns/locale';
 
 interface Expense {
-  id: string; category: string; description: string; amount: number; createdAt: string;
+  id: string; category: string; description: string; amount: number; createdAt: string; orderId?: number | null;
 }
 
 const CATEGORIES = [
@@ -42,6 +42,7 @@ const Expenses = () => {
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
   const [expenseDate, setExpenseDate] = useState<Date>(new Date());
+  const [selectedOrderId, setSelectedOrderId] = useState<string>('');
   const [filterCategory, setFilterCategory] = useState<string>('all');
   const [dateFilter, setDateFilter] = useState<DateFilter>('all');
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -50,7 +51,7 @@ const Expenses = () => {
 
   const fetchExpenses = useCallback(async () => {
     const { data, error } = await supabase.from('expenses').select('*').order('created_at', { ascending: false });
-    if (!error && data) setExpenses(data.map((r: any) => ({ id: r.id, category: r.category, description: r.description, amount: Number(r.amount), createdAt: r.created_at })));
+    if (!error && data) setExpenses(data.map((r: any) => ({ id: r.id, category: r.category, description: r.description, amount: Number(r.amount), createdAt: r.created_at, orderId: r.order_id })));
     setLoading(false);
   }, []);
 
@@ -62,10 +63,12 @@ const Expenses = () => {
 
   const handleSubmit = async () => {
     if (!description.trim() || !amount) return;
-    const { error } = await supabase.from('expenses').insert({ category, description: description.trim(), amount: parseFloat(amount) || 0, created_at: expenseDate.toISOString() });
+    const insertData: any = { category, description: description.trim(), amount: parseFloat(amount) || 0, created_at: expenseDate.toISOString() };
+    if (category === 'materials' && selectedOrderId) insertData.order_id = parseInt(selectedOrderId);
+    const { error } = await supabase.from('expenses').insert(insertData);
     if (error) { toast({ title: 'Erro ao salvar', variant: 'destructive' }); return; }
     toast({ title: 'Despesa registrada!' });
-    setDescription(''); setAmount(''); setCategory('food'); setExpenseDate(new Date()); setOpen(false);
+    setDescription(''); setAmount(''); setCategory('food'); setExpenseDate(new Date()); setSelectedOrderId(''); setOpen(false);
   };
 
   const handleDelete = async (id: string) => {
@@ -144,6 +147,20 @@ const Expenses = () => {
                 </SelectContent>
               </Select>
             </div>
+            {category === 'materials' && (
+              <div className="space-y-2">
+                <Label>Ordem de Serviço (opcional)</Label>
+                <Select value={selectedOrderId} onValueChange={setSelectedOrderId}>
+                  <SelectTrigger className="rounded-xl"><SelectValue placeholder="Selecione a OS..." /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Nenhuma</SelectItem>
+                    {orders.filter(o => o.status !== 'closed').map(o => (
+                      <SelectItem key={o.id} value={String(o.id)}>OS #{o.id} - {o.clientName}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
             <div className="space-y-2"><Label>Descrição *</Label><Input value={description} onChange={e => setDescription(e.target.value)} placeholder="Ex: Almoço equipe, Gasolina carro..." className="rounded-xl" /></div>
             <div className="space-y-2"><Label>Valor (R$) *</Label><Input type="number" inputMode="numeric" step="0.01" min="0" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0,00" className="rounded-xl" /></div>
             <div className="space-y-2">

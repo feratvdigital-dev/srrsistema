@@ -95,6 +95,7 @@ export type Database = {
           created_at: string
           description: string
           id: string
+          order_id: number | null
         }
         Insert: {
           amount?: number
@@ -102,6 +103,7 @@ export type Database = {
           created_at?: string
           description?: string
           id?: string
+          order_id?: number | null
         }
         Update: {
           amount?: number
@@ -109,8 +111,17 @@ export type Database = {
           created_at?: string
           description?: string
           id?: string
+          order_id?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "expenses_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "service_orders"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       invoice_requests: {
         Row: {
