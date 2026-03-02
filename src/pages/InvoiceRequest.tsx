@@ -94,7 +94,7 @@ const InvoiceRequest = () => {
             <p className="text-muted-foreground">
               Sua solicitação de Nota Fiscal <strong>{requestId}</strong> foi registrada. Acompanhe o status pelo link abaixo.
             </p>
-            <a href={`/invoice-track?id=${encodeURIComponent(requestId)}`} className="block">
+            <a href={`/invoice-track?phone=${encodeURIComponent(phone)}`} className="block">
               <Button className="w-full h-12 text-base font-semibold bg-green-600 hover:bg-green-700 text-white gap-2">
                 <Search className="h-5 w-5" /> Acompanhar Nota Fiscal
               </Button>
