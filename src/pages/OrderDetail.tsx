@@ -9,12 +9,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Camera, Download, ArrowLeft, MapPin, Clock, ExternalLink,
   Droplets, Zap, Wrench, Circle, Play, CheckCircle2, Lock, MoreHorizontal,
-  Save, Image as ImageIcon, PenTool, User, Trash2, Loader2,
-  FileText, XCircle, DollarSign
+  Save, PenTool, User, Trash2, Loader2,
+  FileText, XCircle, Hash, Phone, Mail, CalendarDays, Receipt
 } from 'lucide-react';
 import { STATUS_LABELS, SERVICE_TYPE_LABELS, OrderStatus, ServiceType } from '@/types/serviceOrder';
 import { useToast } from '@/hooks/use-toast';
@@ -28,13 +27,15 @@ const serviceTypeIcons: Record<ServiceType, React.ElementType> = {
   other: MoreHorizontal,
 };
 
-const statusConfig: Record<OrderStatus, { icon: React.ElementType; bgClass: string; textClass: string }> = {
-  open: { icon: Circle, bgClass: 'bg-yellow-50', textClass: 'text-yellow-700' },
-  quote: { icon: FileText, bgClass: 'bg-purple-50', textClass: 'text-purple-700' },
-  executing: { icon: Play, bgClass: 'bg-blue-50', textClass: 'text-blue-700' },
-  executed: { icon: CheckCircle2, bgClass: 'bg-green-50', textClass: 'text-green-700' },
-  closed: { icon: Lock, bgClass: 'bg-gray-100', textClass: 'text-gray-700' },
+const statusConfig: Record<OrderStatus, { icon: React.ElementType; gradient: string; badge: string; glow: string }> = {
+  open: { icon: Circle, gradient: 'from-yellow-400 to-amber-500', badge: 'bg-yellow-100 text-yellow-800', glow: 'shadow-yellow-200/50' },
+  quote: { icon: FileText, gradient: 'from-purple-500 to-violet-600', badge: 'bg-purple-100 text-purple-800', glow: 'shadow-purple-200/50' },
+  executing: { icon: Play, gradient: 'from-blue-500 to-indigo-600', badge: 'bg-blue-100 text-blue-800', glow: 'shadow-blue-200/50' },
+  executed: { icon: CheckCircle2, gradient: 'from-emerald-500 to-green-600', badge: 'bg-emerald-100 text-emerald-800', glow: 'shadow-emerald-200/50' },
+  closed: { icon: Lock, gradient: 'from-gray-400 to-gray-600', badge: 'bg-gray-100 text-gray-700', glow: 'shadow-gray-200/50' },
 };
+
+const statusSteps: OrderStatus[] = ['open', 'quote', 'executing', 'executed', 'closed'];
 
 const OrderDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -65,13 +66,18 @@ const OrderDetail = () => {
   const [uploadingPhase, setUploadingPhase] = useState<string | null>(null);
   const [editingClosed, setEditingClosed] = useState(false);
 
-  // No refs needed - using label approach for better mobile compatibility
-
   if (!order) {
     return (
-      <div className="text-center py-12">
-        <p className="text-muted-foreground">Ordem de serviço não encontrada</p>
-        <Button variant="outline" className="mt-4" onClick={() => navigate('/dashboard')}>Voltar</Button>
+      <div className="min-h-screen flex items-center justify-center bg-muted/30">
+        <Card className="border-0 shadow-xl rounded-2xl p-8 text-center">
+          <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
+            <FileText className="h-8 w-8 text-muted-foreground" />
+          </div>
+          <p className="text-muted-foreground mb-4">Ordem de serviço não encontrada</p>
+          <Button variant="outline" className="rounded-xl" onClick={() => navigate('/dashboard')}>
+            <ArrowLeft className="h-4 w-4 mr-2" /> Voltar ao Dashboard
+          </Button>
+        </Card>
       </div>
     );
   }
@@ -127,58 +133,114 @@ const OrderDetail = () => {
   const SvcIcon = serviceTypeIcons[order.serviceType];
   const isClosed = order.status === 'closed';
   const isEditable = !isClosed || editingClosed;
+  const currentStepIndex = statusSteps.indexOf(order.status);
 
   const photoSections = [
-    { key: 'before' as const, label: 'ANTES', emoji: '📷' },
-    { key: 'during' as const, label: 'DURANTE', emoji: '🔧' },
-    { key: 'after' as const, label: 'DEPOIS', emoji: '✅' },
+    { key: 'before' as const, label: 'ANTES', icon: Camera, gradient: 'from-amber-400 to-orange-500' },
+    { key: 'during' as const, label: 'DURANTE', icon: Wrench, gradient: 'from-blue-400 to-indigo-500' },
+    { key: 'after' as const, label: 'DEPOIS', icon: CheckCircle2, gradient: 'from-emerald-400 to-green-500' },
   ];
 
   const total = (parseFloat(laborCost) || 0) + (parseFloat(materialCost) || 0);
 
   return (
-    <div>
-      {/* Dark Header */}
+    <div className="min-h-screen bg-muted/30">
+      {/* Premium Header */}
       <header className="app-header sticky top-0 z-50 shadow-lg">
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <button onClick={() => navigate('/dashboard')} className="p-1 hover:opacity-80">
+            <button onClick={() => navigate('/dashboard')} className="p-2 rounded-xl hover:bg-white/10 transition-colors">
               <ArrowLeft className="h-5 w-5" />
             </button>
             <div>
-              <h1 className="font-bold text-base">OS {order.id}</h1>
+              <div className="flex items-center gap-2">
+                <Hash className="h-3.5 w-3.5 opacity-60" />
+                <h1 className="font-bold text-base">OS {order.id}</h1>
+              </div>
               <p className="text-xs opacity-70">{order.clientName}</p>
             </div>
           </div>
-          <Badge variant="outline" className={`${config.bgClass} ${config.textClass} border-0`}>
-            <StatusIcon className="h-3 w-3 mr-1" />
+          <Badge className={`${config.badge} border-0 px-3 py-1 rounded-full font-semibold text-xs`}>
+            <StatusIcon className="h-3 w-3 mr-1.5" />
             {STATUS_LABELS[order.status]}
           </Badge>
         </div>
       </header>
 
-      <div className="max-w-2xl mx-auto px-4 py-6 space-y-6">
-        {/* Service Info */}
-        <Card className="border-0 shadow-sm">
-          <CardContent className="p-5 space-y-3">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
-                <SvcIcon className="h-5 w-5" />
+      <div className="max-w-2xl mx-auto px-4 py-6 space-y-5">
+
+        {/* Status Progress Bar */}
+        <Card className="border-0 shadow-lg rounded-2xl overflow-hidden">
+          <div className={`h-1.5 bg-gradient-to-r ${config.gradient}`} />
+          <CardContent className="p-5">
+            <div className="flex items-center justify-between">
+              {statusSteps.map((step, i) => {
+                const StepIcon = statusConfig[step].icon;
+                const isActive = i <= currentStepIndex;
+                const isCurrent = i === currentStepIndex;
+                return (
+                  <div key={step} className="flex items-center flex-1 last:flex-none">
+                    <div className={`relative flex flex-col items-center ${isCurrent ? 'scale-110' : ''} transition-transform`}>
+                      <div className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-300 ${
+                        isCurrent ? `bg-gradient-to-br ${statusConfig[step].gradient} text-white shadow-lg ${statusConfig[step].glow}` :
+                        isActive ? 'bg-primary/15 text-primary' : 'bg-muted text-muted-foreground'
+                      }`}>
+                        <StepIcon className="h-4 w-4" />
+                      </div>
+                      <span className={`text-[10px] mt-1.5 font-medium ${isCurrent ? 'text-foreground' : 'text-muted-foreground'}`}>
+                        {STATUS_LABELS[step]}
+                      </span>
+                    </div>
+                    {i < statusSteps.length - 1 && (
+                      <div className={`flex-1 h-0.5 mx-1.5 rounded-full transition-colors ${
+                        i < currentStepIndex ? 'bg-primary' : 'bg-muted'
+                      }`} />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Client & Service Hero Card */}
+        <Card className="border-0 shadow-lg rounded-2xl overflow-hidden group hover:shadow-xl transition-all duration-300">
+          <div className={`h-1.5 bg-gradient-to-r ${config.gradient}`} />
+          <CardContent className="p-6 space-y-4">
+            <div className="flex items-start gap-4">
+              <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${config.gradient} text-white flex items-center justify-center shadow-lg ${config.glow} shrink-0`}>
+                <SvcIcon className="h-7 w-7" />
               </div>
-              <div>
-                <p className="font-bold">{SERVICE_TYPE_LABELS[order.serviceType]}</p>
-                <p className="text-sm text-muted-foreground">{order.clientPhone}</p>
+              <div className="flex-1 min-w-0">
+                <h2 className="font-bold text-lg">{SERVICE_TYPE_LABELS[order.serviceType]}</h2>
+                <p className="text-sm text-muted-foreground font-medium">{order.clientName}</p>
+                <div className="flex flex-wrap gap-3 mt-2">
+                  <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <Phone className="h-3 w-3" /> {order.clientPhone}
+                  </span>
+                  {order.clientEmail && (
+                    <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <Mail className="h-3 w-3" /> {order.clientEmail}
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
-            <div className="text-sm space-y-1 text-muted-foreground">
+
+            <div className="space-y-2.5 pt-2">
               {isEditable ? (
                 <div className="flex items-center gap-2">
-                  <MapPin className="h-4 w-4 shrink-0" />
-                  <Input value={address} onChange={e => setAddress(e.target.value)} className="h-8 text-sm" />
+                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                    <MapPin className="h-4 w-4 text-primary" />
+                  </div>
+                  <Input value={address} onChange={e => setAddress(e.target.value)} className="h-9 text-sm rounded-xl border-muted" />
                 </div>
               ) : (
                 <div className="flex items-center gap-2">
-                  <MapPin className="h-4 w-4" /> {order.address}
+                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                    <MapPin className="h-4 w-4 text-primary" />
+                  </div>
+                  <span className="text-sm">{order.address}</span>
                 </div>
               )}
               {order.latitude && order.longitude && (
@@ -186,36 +248,44 @@ const OrderDetail = () => {
                   href={`https://maps.google.com/?q=${order.latitude},${order.longitude}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="flex items-center gap-1 text-primary hover:underline"
+                  className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline bg-primary/5 px-3 py-1.5 rounded-full font-medium transition-colors hover:bg-primary/10"
                 >
-                  <ExternalLink className="h-3 w-3" /> Ver no mapa
+                  <ExternalLink className="h-3 w-3" /> Ver no Google Maps
                 </a>
               )}
               <div className="flex items-center gap-2">
-                <Clock className="h-4 w-4" />
-                Aberto em {new Date(order.createdAt).toLocaleDateString('pt-BR')} às{' '}
-                {new Date(order.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                  <CalendarDays className="h-4 w-4 text-muted-foreground" />
+                </div>
+                <span className="text-sm text-muted-foreground">
+                  Aberto em {new Date(order.createdAt).toLocaleDateString('pt-BR')} às{' '}
+                  {new Date(order.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                </span>
               </div>
             </div>
-            <div className="pt-2 border-t">
-              <p className="text-xs text-muted-foreground uppercase tracking-wide">Descrição</p>
-              <p className="text-sm mt-1">{order.description}</p>
+
+            <div className="pt-3 border-t border-dashed">
+              <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-semibold mb-1.5">Descrição do Serviço</p>
+              <p className="text-sm leading-relaxed">{order.description}</p>
             </div>
           </CardContent>
         </Card>
 
         {/* Technician */}
-        <Card className="border-0 shadow-sm">
-          <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
-              <User className="h-4 w-4" /> Técnico(s) Responsável(is)
+        <Card className="border-0 shadow-lg rounded-2xl overflow-hidden hover:shadow-xl transition-all duration-300">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm flex items-center gap-2 uppercase tracking-wide text-muted-foreground">
+              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                <User className="h-4 w-4 text-primary" />
+              </div>
+              Técnico(s) Responsável(is)
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-2">
             {isEditable ? (
-              <div className="space-y-3">
+              <div className="space-y-2">
                 {technicians.map(t => (
-                  <label key={t.id} className="flex items-center gap-3 p-3 rounded-lg border cursor-pointer hover:bg-muted/50 transition-colors">
+                  <label key={t.id} className="flex items-center gap-3 p-3 rounded-xl border border-muted cursor-pointer hover:bg-primary/5 hover:border-primary/30 transition-all duration-200">
                     <Checkbox
                       checked={selectedTechnicians.includes(t.name)}
                       onCheckedChange={() => toggleTechnician(t.name)}
@@ -223,39 +293,69 @@ const OrderDetail = () => {
                     <div className="flex-1">
                       <p className="text-sm font-medium">{t.name}</p>
                     </div>
+                    {selectedTechnicians.includes(t.name) && (
+                      <Badge variant="secondary" className="text-[10px] px-2 py-0.5 rounded-full">Selecionado</Badge>
+                    )}
                   </label>
                 ))}
                 {selectedTechnicians.length > 0 && (
-                  <p className="text-xs text-muted-foreground">
-                    {selectedTechnicians.length} técnico(s): {selectedTechnicians.join(', ')}
-                  </p>
+                  <div className="flex items-center gap-2 p-2 rounded-lg bg-primary/5">
+                    <CheckCircle2 className="h-3.5 w-3.5 text-primary" />
+                    <p className="text-xs text-primary font-medium">
+                      {selectedTechnicians.length} técnico(s) selecionado(s)
+                    </p>
+                  </div>
                 )}
               </div>
             ) : (
-              <p className="font-medium">{order.assignedTechnician || '-'}</p>
+              <div className="flex items-center gap-2 p-3 rounded-xl bg-muted/50">
+                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                  <User className="h-4 w-4 text-primary" />
+                </div>
+                <p className="font-medium text-sm">{order.assignedTechnician || 'Nenhum técnico atribuído'}</p>
+              </div>
             )}
           </CardContent>
         </Card>
 
         {/* Photos */}
-        <Card className="border-0 shadow-sm">
-          <CardHeader><CardTitle className="text-base">Registro Fotográfico</CardTitle></CardHeader>
-          <CardContent className="space-y-6">
-            {photoSections.map(({ key, label, emoji }) => (
+        <Card className="border-0 shadow-lg rounded-2xl overflow-hidden hover:shadow-xl transition-all duration-300">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm flex items-center gap-2 uppercase tracking-wide text-muted-foreground">
+              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                <Camera className="h-4 w-4 text-primary" />
+              </div>
+              Registro Fotográfico
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-5 pt-2">
+            {photoSections.map(({ key, label, icon: SectionIcon, gradient }) => (
               <div key={key}>
-                <p className="text-sm font-semibold mb-2">{emoji} Fotos - {label}</p>
+                <div className="flex items-center gap-2 mb-3">
+                  <div className={`w-7 h-7 rounded-lg bg-gradient-to-br ${gradient} text-white flex items-center justify-center`}>
+                    <SectionIcon className="h-3.5 w-3.5" />
+                  </div>
+                  <p className="text-sm font-semibold">Fotos - {label}</p>
+                  {order.photos[key].length > 0 && (
+                    <Badge variant="secondary" className="text-[10px] px-2 py-0.5 rounded-full ml-auto">
+                      {order.photos[key].length}
+                    </Badge>
+                  )}
+                </div>
                 <div className="flex gap-3 flex-wrap">
                   {order.photos[key].map((photo, i) => (
-                    <img key={i} src={photo} alt={`${label} ${i + 1}`} className="w-32 h-32 object-cover rounded-xl border" />
+                    <div key={i} className="relative group/photo">
+                      <img src={photo} alt={`${label} ${i + 1}`} className="w-28 h-28 object-cover rounded-xl border shadow-sm group-hover/photo:shadow-md transition-shadow" />
+                    </div>
                   ))}
                   {isEditable && (
                     <>
                       <label
                         htmlFor={`photo-${key}`}
-                        className="w-32 h-32 border-2 border-dashed border-border rounded-xl flex flex-col items-center justify-center gap-2 text-muted-foreground hover:border-primary hover:text-primary transition-colors cursor-pointer"
+                        className="w-28 h-28 border-2 border-dashed border-muted-foreground/20 rounded-xl flex flex-col items-center justify-center gap-2 text-muted-foreground hover:border-primary hover:text-primary hover:bg-primary/5 transition-all duration-200 cursor-pointer"
                       >
-                        {uploadingPhase === key ? <Loader2 className="h-6 w-6 animate-spin" /> : <Camera className="h-6 w-6" />}
-                        <span className="text-xs">{uploadingPhase === key ? 'Enviando...' : 'Adicionar'}</span>
+                        {uploadingPhase === key ? <Loader2 className="h-5 w-5 animate-spin" /> : <Camera className="h-5 w-5" />}
+                        <span className="text-[10px] font-medium">{uploadingPhase === key ? 'Enviando...' : 'Adicionar'}</span>
                       </label>
                       <input
                         id={`photo-${key}`}
@@ -278,48 +378,71 @@ const OrderDetail = () => {
 
         {/* Observation */}
         {isEditable && (
-          <Card className="border-0 shadow-sm">
-            <CardHeader><CardTitle className="text-base">Observações do Serviço</CardTitle></CardHeader>
-            <CardContent>
+          <Card className="border-0 shadow-lg rounded-2xl overflow-hidden hover:shadow-xl transition-all duration-300">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm flex items-center gap-2 uppercase tracking-wide text-muted-foreground">
+                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <PenTool className="h-4 w-4 text-primary" />
+                </div>
+                Observações do Serviço
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-2">
               <Textarea
                 value={observation}
                 onChange={e => setObservation(e.target.value)}
                 placeholder="Descreva o que foi realizado..."
                 rows={4}
+                className="rounded-xl border-muted resize-none"
               />
             </CardContent>
           </Card>
         )}
 
         {/* Costs */}
-        <Card className="border-0 shadow-sm">
-          <CardHeader><CardTitle className="text-base">Custos do Serviço</CardTitle></CardHeader>
-          <CardContent className="space-y-4">
+        <Card className="border-0 shadow-lg rounded-2xl overflow-hidden hover:shadow-xl transition-all duration-300">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm flex items-center gap-2 uppercase tracking-wide text-muted-foreground">
+              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                <Receipt className="h-4 w-4 text-primary" />
+              </div>
+              Custos do Serviço
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4 pt-2">
             {isEditable ? (
               <>
                 <div className="space-y-2">
-                  <Label>Mão de obra (R$)</Label>
-                  <Input type="number" inputMode="numeric" step="0.01" min="0" value={laborCost} onChange={e => setLaborCost(e.target.value)} placeholder="0" />
+                  <Label className="text-xs uppercase tracking-wide text-muted-foreground">Mão de obra (R$)</Label>
+                  <Input type="number" inputMode="numeric" step="0.01" min="0" value={laborCost} onChange={e => setLaborCost(e.target.value)} placeholder="0" className="rounded-xl border-muted" />
                 </div>
                 <div className="space-y-2">
-                  <Label>Materiais (R$)</Label>
-                  <Input type="number" inputMode="numeric" step="0.01" min="0" value={materialCost} onChange={e => setMaterialCost(e.target.value)} placeholder="0" />
+                  <Label className="text-xs uppercase tracking-wide text-muted-foreground">Materiais (R$)</Label>
+                  <Input type="number" inputMode="numeric" step="0.01" min="0" value={materialCost} onChange={e => setMaterialCost(e.target.value)} placeholder="0" className="rounded-xl border-muted" />
                 </div>
                 <div className="space-y-2">
-                  <Label>Materiais utilizados</Label>
-                  <Textarea value={materialDescription} onChange={e => setMaterialDescription(e.target.value)} placeholder="Descreva os materiais utilizados..." rows={3} />
+                  <Label className="text-xs uppercase tracking-wide text-muted-foreground">Materiais utilizados</Label>
+                  <Textarea value={materialDescription} onChange={e => setMaterialDescription(e.target.value)} placeholder="Descreva os materiais utilizados..." rows={3} className="rounded-xl border-muted resize-none" />
                 </div>
               </>
             ) : (
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between"><span className="text-muted-foreground">Mão de Obra</span><span className="font-medium">R$ {order.laborCost.toFixed(2)}</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">Materiais</span><span className="font-medium">R$ {order.materialCost.toFixed(2)}</span></div>
-                {order.materialDescription && <p className="text-muted-foreground text-xs">{order.materialDescription}</p>}
+              <div className="space-y-3">
+                <div className="flex justify-between items-center p-3 rounded-xl bg-muted/50">
+                  <span className="text-sm text-muted-foreground">Mão de Obra</span>
+                  <span className="font-semibold">R$ {order.laborCost.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between items-center p-3 rounded-xl bg-muted/50">
+                  <span className="text-sm text-muted-foreground">Materiais</span>
+                  <span className="font-semibold">R$ {order.materialCost.toFixed(2)}</span>
+                </div>
+                {order.materialDescription && (
+                  <p className="text-muted-foreground text-xs px-1">{order.materialDescription}</p>
+                )}
               </div>
             )}
-            <div className="flex justify-between items-center p-4 rounded-xl bg-foreground text-background font-bold">
-              <span>Total</span>
-              <span className="text-lg">R$ {(isClosed ? (order.laborCost + order.materialCost) : total).toFixed(2).replace('.', ',')}</span>
+            <div className={`flex justify-between items-center p-5 rounded-2xl bg-gradient-to-r ${config.gradient} text-white font-bold shadow-lg ${config.glow}`}>
+              <span className="text-sm uppercase tracking-wide opacity-90">Total</span>
+              <span className="text-2xl">R$ {(isClosed ? (order.laborCost + order.materialCost) : total).toFixed(2).replace('.', ',')}</span>
             </div>
           </CardContent>
         </Card>
@@ -328,32 +451,35 @@ const OrderDetail = () => {
         <div className="space-y-3 pb-8">
           {order.status === 'open' && (
             <>
-              <Button onClick={handleSave} className="w-full h-12 bg-secondary hover:bg-secondary/90 text-secondary-foreground gap-2 font-semibold">
+              <Button onClick={handleSave} className="w-full h-12 rounded-xl bg-secondary hover:bg-secondary/90 text-secondary-foreground gap-2 font-semibold shadow-sm hover:shadow-md transition-all">
                 <Save className="h-5 w-5" /> Salvar Alterações
               </Button>
-              <Button onClick={() => handleStatusChange('quote')} className="w-full h-12 bg-purple-600 hover:bg-purple-700 text-white gap-2 font-semibold">
+              <Button onClick={() => handleStatusChange('quote')} className="w-full h-12 rounded-xl bg-gradient-to-r from-purple-500 to-violet-600 hover:from-purple-600 hover:to-violet-700 text-white gap-2 font-semibold shadow-lg shadow-purple-200/50 hover:shadow-xl transition-all">
                 <FileText className="h-5 w-5" /> Enviar Orçamento
               </Button>
             </>
           )}
           {order.status === 'quote' && (
             <>
-              <Button onClick={handleSave} className="w-full h-12 bg-secondary hover:bg-secondary/90 text-secondary-foreground gap-2 font-semibold">
+              <Button onClick={handleSave} className="w-full h-12 rounded-xl bg-secondary hover:bg-secondary/90 text-secondary-foreground gap-2 font-semibold shadow-sm hover:shadow-md transition-all">
                 <Save className="h-5 w-5" /> Salvar Alterações
               </Button>
-              <Button onClick={() => handleStatusChange('executing')} className="w-full h-12 bg-primary hover:bg-primary/90 gap-2 font-semibold">
+              <Button onClick={() => handleStatusChange('executing')} className="w-full h-12 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white gap-2 font-semibold shadow-lg shadow-blue-200/50 hover:shadow-xl transition-all">
                 <CheckCircle2 className="h-5 w-5" /> Cliente Aprovou - Iniciar Serviço
               </Button>
               {!showRejectForm ? (
-                <Button onClick={() => setShowRejectForm(true)} variant="outline" className="w-full h-12 border-destructive text-destructive hover:bg-destructive/10 gap-2 font-semibold">
+                <Button onClick={() => setShowRejectForm(true)} variant="outline" className="w-full h-12 rounded-xl border-destructive text-destructive hover:bg-destructive/10 gap-2 font-semibold transition-all">
                   <XCircle className="h-5 w-5" /> Cliente Recusou Orçamento
                 </Button>
               ) : (
-                <Card className="border-destructive/30">
-                  <CardContent className="p-4 space-y-3">
-                    <p className="text-sm font-semibold text-destructive">Orçamento Recusado</p>
+                <Card className="border-destructive/30 rounded-2xl overflow-hidden">
+                  <div className="h-1 bg-gradient-to-r from-red-400 to-rose-500" />
+                  <CardContent className="p-5 space-y-3">
+                    <p className="text-sm font-semibold text-destructive flex items-center gap-2">
+                      <XCircle className="h-4 w-4" /> Orçamento Recusado
+                    </p>
                     <div className="space-y-2">
-                      <Label>Valor da Visita (R$)</Label>
+                      <Label className="text-xs uppercase tracking-wide text-muted-foreground">Valor da Visita (R$)</Label>
                       <Input
                         type="number"
                         inputMode="numeric"
@@ -362,6 +488,7 @@ const OrderDetail = () => {
                         value={visitCost}
                         onChange={e => setVisitCost(e.target.value)}
                         placeholder="0,00"
+                        className="rounded-xl border-muted"
                       />
                     </div>
                     <Button
@@ -377,11 +504,11 @@ const OrderDetail = () => {
                         toast({ title: `OS #${order.id} encerrada - Orçamento recusado` });
                         generatePDF({ ...order, status: 'closed', laborCost: cost, materialCost: 0, closedAt: new Date().toISOString() } as typeof order);
                       }}
-                      className="w-full bg-destructive hover:bg-destructive/90 text-destructive-foreground gap-2 font-semibold"
+                      className="w-full rounded-xl bg-destructive hover:bg-destructive/90 text-destructive-foreground gap-2 font-semibold"
                     >
                       <Lock className="h-4 w-4" /> Cobrar Visita e Encerrar
                     </Button>
-                    <Button variant="ghost" className="w-full text-sm" onClick={() => setShowRejectForm(false)}>
+                    <Button variant="ghost" className="w-full text-sm rounded-xl" onClick={() => setShowRejectForm(false)}>
                       Cancelar
                     </Button>
                   </CardContent>
@@ -391,20 +518,20 @@ const OrderDetail = () => {
           )}
           {order.status === 'executing' && (
             <>
-              <Button onClick={handleSave} className="w-full h-12 bg-secondary hover:bg-secondary/90 text-secondary-foreground gap-2 font-semibold">
+              <Button onClick={handleSave} className="w-full h-12 rounded-xl bg-secondary hover:bg-secondary/90 text-secondary-foreground gap-2 font-semibold shadow-sm hover:shadow-md transition-all">
                 <Save className="h-5 w-5" /> Salvar Alterações
               </Button>
-              <Button onClick={() => handleStatusChange('executed')} className="w-full h-12 bg-green-600 hover:bg-green-700 text-white gap-2 font-semibold">
+              <Button onClick={() => handleStatusChange('executed')} className="w-full h-12 rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white gap-2 font-semibold shadow-lg shadow-emerald-200/50 hover:shadow-xl transition-all">
                 <CheckCircle2 className="h-5 w-5" /> Marcar como Executado
               </Button>
             </>
           )}
           {order.status === 'executed' && (
             <>
-              <Button onClick={handleSave} className="w-full h-12 bg-secondary hover:bg-secondary/90 text-secondary-foreground gap-2 font-semibold">
+              <Button onClick={handleSave} className="w-full h-12 rounded-xl bg-secondary hover:bg-secondary/90 text-secondary-foreground gap-2 font-semibold shadow-sm hover:shadow-md transition-all">
                 <Save className="h-5 w-5" /> Salvar Alterações
               </Button>
-              <Button onClick={() => handleStatusChange('closed')} className="w-full h-12 bg-green-600 hover:bg-green-700 text-white gap-2 font-semibold">
+              <Button onClick={() => handleStatusChange('closed')} className="w-full h-12 rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white gap-2 font-semibold shadow-lg shadow-emerald-200/50 hover:shadow-xl transition-all">
                 <Lock className="h-5 w-5" /> Encerrar OS
               </Button>
             </>
@@ -412,32 +539,48 @@ const OrderDetail = () => {
           {isClosed && (
             <>
               {!editingClosed ? (
-                <Button onClick={() => setEditingClosed(true)} variant="outline" className="w-full h-12 gap-2 font-semibold">
+                <Button onClick={() => setEditingClosed(true)} variant="outline" className="w-full h-12 rounded-xl gap-2 font-semibold hover:shadow-md transition-all">
                   <PenTool className="h-5 w-5" /> Editar OS
                 </Button>
               ) : (
                 <>
-                  <Button onClick={async () => { await handleSave(); setEditingClosed(false); toast({ title: 'OS atualizada!' }); }} className="w-full h-12 bg-secondary hover:bg-secondary/90 text-secondary-foreground gap-2 font-semibold">
+                  <Button onClick={async () => { await handleSave(); setEditingClosed(false); toast({ title: 'OS atualizada!' }); }} className="w-full h-12 rounded-xl bg-secondary hover:bg-secondary/90 text-secondary-foreground gap-2 font-semibold shadow-sm hover:shadow-md transition-all">
                     <Save className="h-5 w-5" /> Salvar Alterações
                   </Button>
-                  <Button variant="ghost" className="w-full" onClick={() => setEditingClosed(false)}>
+                  <Button variant="ghost" className="w-full rounded-xl" onClick={() => setEditingClosed(false)}>
                     Cancelar Edição
                   </Button>
                 </>
               )}
-              <Button onClick={() => generatePDF(order)} className="w-full h-12 bg-green-600 hover:bg-green-700 text-white gap-2 font-semibold">
+              <Button onClick={() => generatePDF(order)} className="w-full h-12 rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white gap-2 font-semibold shadow-lg shadow-emerald-200/50 hover:shadow-xl transition-all">
                 <Download className="h-5 w-5" /> Ver Relatório PDF
               </Button>
               {order.clientEmail && (
-                <p className="text-center text-sm text-muted-foreground">
-                  ✓ Enviado para {order.clientEmail}
-                </p>
+                <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                  Enviado para {order.clientEmail}
+                </div>
               )}
-              <div className="text-center text-xs text-muted-foreground space-y-1">
-                <p>Iniciado em {new Date(order.createdAt).toLocaleDateString('pt-BR')} às {new Date(order.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</p>
-                {order.executedAt && <p>Executado em {new Date(order.executedAt).toLocaleDateString('pt-BR')} às {new Date(order.executedAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</p>}
-                {order.closedAt && <p>Encerrado em {new Date(order.closedAt).toLocaleDateString('pt-BR')} às {new Date(order.closedAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</p>}
-              </div>
+              <Card className="border-0 rounded-2xl bg-muted/50">
+                <CardContent className="p-4 space-y-2">
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <Clock className="h-3.5 w-3.5" />
+                    Iniciado em {new Date(order.createdAt).toLocaleDateString('pt-BR')} às {new Date(order.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                  </div>
+                  {order.executedAt && (
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+                      Executado em {new Date(order.executedAt).toLocaleDateString('pt-BR')} às {new Date(order.executedAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                    </div>
+                  )}
+                  {order.closedAt && (
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <Lock className="h-3.5 w-3.5" />
+                      Encerrado em {new Date(order.closedAt).toLocaleDateString('pt-BR')} às {new Date(order.closedAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
             </>
           )}
 
@@ -451,7 +594,7 @@ const OrderDetail = () => {
                 navigate('/dashboard');
               }
             }}
-            className="w-full h-12 border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground gap-2 font-semibold"
+            className="w-full h-12 rounded-xl border-destructive/30 text-destructive hover:bg-destructive hover:text-destructive-foreground gap-2 font-semibold transition-all"
           >
             <Trash2 className="h-5 w-5" /> Excluir Ordem de Serviço
           </Button>
