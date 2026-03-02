@@ -112,12 +112,7 @@ const InvoiceTrack = () => {
     e.preventDefault();
     const trimmed = searchValue.trim();
     if (!trimmed) return;
-
-    if (trimmed.toUpperCase().startsWith('NF')) {
-      await searchById(trimmed);
-    } else {
-      await searchByPhone(trimmed);
-    }
+    await searchByPhone(trimmed);
   };
 
   const getStepIndex = (status: string) => STEPS.indexOf(status as any);
@@ -144,14 +139,14 @@ const InvoiceTrack = () => {
                 <FileText className="h-10 w-10 mx-auto text-primary opacity-60" />
                 <h2 className="text-lg font-bold">Consulte sua Nota Fiscal</h2>
                 <p className="text-sm text-muted-foreground">
-                  Digite seu WhatsApp ou o código da solicitação
+                  Digite seu WhatsApp para consultar
                 </p>
               </div>
               <div className="flex gap-2">
                 <Input
                   value={searchValue}
                   onChange={e => setSearchValue(e.target.value)}
-                  placeholder="WhatsApp ou código (NF...)"
+                  placeholder="(11) 99999-9999"
                   className="flex-1"
                 />
                 <Button type="submit" className="bg-primary gap-1">
