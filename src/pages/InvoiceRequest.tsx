@@ -69,8 +69,7 @@ const InvoiceRequest = () => {
 
             <a href="/invoice-track" className="block">
               <Button
-                variant="outline"
-                className="w-full h-16 text-base font-bold border-white/20 text-white hover:bg-white/10 gap-3 rounded-2xl shadow-lg hover:shadow-xl transition-all"
+                className="w-full h-16 text-base font-bold bg-yellow-500 hover:bg-yellow-600 text-white gap-3 rounded-2xl shadow-lg hover:shadow-xl transition-all"
               >
                 <Search className="h-6 w-6" />
                 Acompanhar Nota Fiscal
