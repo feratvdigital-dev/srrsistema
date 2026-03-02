@@ -10,6 +10,13 @@ import { SERVICE_TYPE_LABELS } from '@/types/serviceOrder';
 
 const COLORS = ['#3b82f6', '#f59e0b', '#10b981', '#6b7280', '#8b5cf6'];
 
+const statGradients = [
+  'bg-gradient-to-br from-[hsl(215,40%,16%)] to-[hsl(215,35%,28%)]',
+  'bg-gradient-to-br from-[hsl(152,60%,38%)] to-[hsl(152,50%,50%)]',
+  'bg-gradient-to-br from-[hsl(207,90%,45%)] to-[hsl(207,80%,58%)]',
+  'bg-gradient-to-br from-[hsl(40,95%,50%)] to-[hsl(30,90%,55%)]',
+];
+
 const Reports = () => {
   const { orders } = useOrders();
   const { technicians } = useTechnicians();
@@ -22,7 +29,6 @@ const Reports = () => {
   const filtered = useMemo(() => {
     let result = orders;
     const now = new Date();
-
     if (period !== 'custom') {
       const days = parseInt(period);
       const cutoff = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
@@ -42,13 +48,10 @@ const Reports = () => {
   const avgTime = useMemo(() => {
     const withTime = closedOrders.filter(o => o.closedAt);
     if (withTime.length === 0) return 0;
-    const total = withTime.reduce((s, o) => {
-      return s + (new Date(o.closedAt!).getTime() - new Date(o.createdAt).getTime());
-    }, 0);
-    return total / withTime.length / (1000 * 60 * 60); // hours
+    const total = withTime.reduce((s, o) => s + (new Date(o.closedAt!).getTime() - new Date(o.createdAt).getTime()), 0);
+    return total / withTime.length / (1000 * 60 * 60);
   }, [closedOrders]);
 
-  // Status distribution
   const statusData = [
     { name: 'Em Aberto', value: filtered.filter(o => o.status === 'open').length },
     { name: 'Orçamento', value: filtered.filter(o => o.status === 'quote').length },
@@ -57,7 +60,6 @@ const Reports = () => {
     { name: 'Encerrado', value: filtered.filter(o => o.status === 'closed').length },
   ].filter(d => d.value > 0);
 
-  // Monthly data
   const monthlyData = useMemo(() => {
     const months: Record<string, number> = {};
     filtered.forEach(o => {
@@ -68,14 +70,12 @@ const Reports = () => {
     return Object.entries(months).map(([name, value]) => ({ name, value }));
   }, [filtered]);
 
-  // Service type distribution
   const typeData = [
     { name: 'Hidráulica', value: filtered.filter(o => o.serviceType === 'hydraulic').length },
     { name: 'Elétrica', value: filtered.filter(o => o.serviceType === 'electrical').length },
     { name: 'Ambos', value: filtered.filter(o => o.serviceType === 'both').length },
   ].filter(d => d.value > 0);
 
-  // Technician performance
   const techData = useMemo(() => {
     const techs: Record<string, { total: number; closed: number }> = {};
     filtered.forEach(o => {
@@ -89,8 +89,26 @@ const Reports = () => {
 
   return (
     <div className="space-y-6">
+      {/* Stats */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        {[
+          { icon: BarChart3, label: 'Total de OS', value: filtered.length, gradient: statGradients[0] },
+          { icon: CheckCircle2, label: 'Encerradas', value: closedOrders.length, gradient: statGradients[1] },
+          { icon: Clock, label: 'Tempo médio', value: `${avgTime.toFixed(1)}h`, gradient: statGradients[2] },
+          { icon: TrendingUp, label: 'Faturamento', value: `R$ ${totalRevenue.toFixed(0)}`, gradient: statGradients[3] },
+        ].map(({ icon: Icon, label, value, gradient }) => (
+          <div key={label} className={`relative overflow-hidden rounded-2xl p-4 ${gradient}`}>
+            <div className="absolute top-0 right-0 w-16 h-16 rounded-full bg-white/10 -translate-y-4 translate-x-4" />
+            <Icon className="h-5 w-5 text-white/70 mb-2" />
+            <p className="text-2xl font-extrabold text-white tracking-tight">{value}</p>
+            <p className="text-xs text-white/70 font-medium">{label}</p>
+          </div>
+        ))}
+      </div>
+
       {/* Filters */}
-      <Card className="border-0 shadow-sm">
+      <Card className="border-0 shadow-sm overflow-hidden">
+        <div className="h-1 bg-gradient-to-r from-primary to-secondary" />
         <CardContent className="p-5">
           <div className="flex items-center gap-2 mb-3">
             <Filter className="h-4 w-4 text-muted-foreground" />
@@ -98,7 +116,7 @@ const Reports = () => {
           </div>
           <div className="flex flex-wrap gap-3">
             <Select value={period} onValueChange={setPeriod}>
-              <SelectTrigger className="w-[180px]"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="w-[180px] rounded-xl"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="7">Últimos 7 dias</SelectItem>
                 <SelectItem value="30">Últimos 30 dias</SelectItem>
@@ -109,19 +127,19 @@ const Reports = () => {
             </Select>
             {period === 'custom' && (
               <>
-                <Input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="w-[160px]" />
-                <Input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="w-[160px]" />
+                <Input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="w-[160px] rounded-xl" />
+                <Input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="w-[160px] rounded-xl" />
               </>
             )}
             <Select value={techFilter} onValueChange={setTechFilter}>
-              <SelectTrigger className="w-[180px]"><SelectValue placeholder="Todos técnicos" /></SelectTrigger>
+              <SelectTrigger className="w-[180px] rounded-xl"><SelectValue placeholder="Todos técnicos" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos técnicos</SelectItem>
                 {technicians.map(t => <SelectItem key={t.id} value={t.name}>{t.name}</SelectItem>)}
               </SelectContent>
             </Select>
             <Select value={typeFilter} onValueChange={setTypeFilter}>
-              <SelectTrigger className="w-[160px]"><SelectValue placeholder="Todos tipos" /></SelectTrigger>
+              <SelectTrigger className="w-[160px] rounded-xl"><SelectValue placeholder="Todos tipos" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos tipos</SelectItem>
                 <SelectItem value="hydraulic">Hidráulica</SelectItem>
@@ -133,97 +151,38 @@ const Reports = () => {
         </CardContent>
       </Card>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Charts */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         {[
-          { icon: BarChart3, label: 'Total de OS', value: filtered.length, bgClass: 'bg-gray-100', textClass: 'text-gray-600' },
-          { icon: CheckCircle2, label: 'Encerradas', value: closedOrders.length, bgClass: 'bg-green-100', textClass: 'text-green-600' },
-          { icon: Clock, label: 'Tempo médio', value: `${avgTime.toFixed(1)}h`, bgClass: 'bg-blue-100', textClass: 'text-blue-600' },
-          { icon: TrendingUp, label: 'Faturamento', value: `R$ ${totalRevenue.toFixed(0)}`, bgClass: 'bg-orange-100', textClass: 'text-orange-600' },
-        ].map(({ icon: Icon, label, value, bgClass, textClass }) => (
-          <Card key={label} className="border-0 shadow-sm">
-            <CardContent className="p-4 flex items-center gap-3">
-              <div className={`w-10 h-10 rounded-xl ${bgClass} ${textClass} flex items-center justify-center`}>
-                <Icon className="h-5 w-5" />
-              </div>
-              <div>
-                <p className="text-xl font-bold text-foreground">{value}</p>
-                <p className="text-xs text-muted-foreground">{label}</p>
-              </div>
+          { title: 'Distribuição por Status', content: statusData.length > 0 ? (
+            <ResponsiveContainer width="100%" height={250}>
+              <PieChart><Pie data={statusData} cx="50%" cy="50%" innerRadius={60} outerRadius={90} dataKey="value" label={({ name, value }) => `${name}: ${value}`}>{statusData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}</Pie><Tooltip /></PieChart>
+            </ResponsiveContainer>
+          ) : null },
+          { title: 'Chamados por Mês', content: monthlyData.length > 0 ? (
+            <ResponsiveContainer width="100%" height={250}>
+              <BarChart data={monthlyData}><CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="name" /><YAxis /><Tooltip /><Bar dataKey="value" fill="hsl(207, 90%, 54%)" radius={[6, 6, 0, 0]} /></BarChart>
+            </ResponsiveContainer>
+          ) : null },
+          { title: 'Por Tipo de Serviço', content: typeData.length > 0 ? (
+            <ResponsiveContainer width="100%" height={250}>
+              <PieChart><Pie data={typeData} cx="50%" cy="50%" innerRadius={60} outerRadius={90} dataKey="value" label={({ name, value }) => `${name}: ${value}`}>{typeData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}</Pie><Tooltip /></PieChart>
+            </ResponsiveContainer>
+          ) : null },
+          { title: 'Desempenho por Técnico', content: techData.length > 0 ? (
+            <ResponsiveContainer width="100%" height={250}>
+              <BarChart data={techData} layout="vertical"><CartesianGrid strokeDasharray="3 3" /><XAxis type="number" /><YAxis dataKey="name" type="category" width={100} /><Tooltip /><Legend /><Bar dataKey="Total" fill="#94a3b8" radius={[0, 6, 6, 0]} /><Bar dataKey="Encerradas" fill="#10b981" radius={[0, 6, 6, 0]} /></BarChart>
+            </ResponsiveContainer>
+          ) : null },
+        ].map(({ title, content }) => (
+          <Card key={title} className="border-0 shadow-sm hover:shadow-md transition-shadow overflow-hidden">
+            <div className="h-1 bg-gradient-to-r from-primary/30 to-primary/10" />
+            <CardHeader><CardTitle className="text-base">{title}</CardTitle></CardHeader>
+            <CardContent>
+              {content || <p className="text-center text-muted-foreground py-12">Sem dados</p>}
             </CardContent>
           </Card>
         ))}
-      </div>
-
-      {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="border-0 shadow-sm">
-          <CardHeader><CardTitle className="text-base">Distribuição por Status</CardTitle></CardHeader>
-          <CardContent>
-            {statusData.length > 0 ? (
-              <ResponsiveContainer width="100%" height={250}>
-                <PieChart>
-                  <Pie data={statusData} cx="50%" cy="50%" innerRadius={60} outerRadius={90} dataKey="value" label={({ name, value }) => `${name}: ${value}`}>
-                    {statusData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
-            ) : <p className="text-center text-muted-foreground py-12">Sem dados</p>}
-          </CardContent>
-        </Card>
-
-        <Card className="border-0 shadow-sm">
-          <CardHeader><CardTitle className="text-base">Chamados por Mês</CardTitle></CardHeader>
-          <CardContent>
-            {monthlyData.length > 0 ? (
-              <ResponsiveContainer width="100%" height={250}>
-                <BarChart data={monthlyData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
-                  <Bar dataKey="value" fill="#3b82f6" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            ) : <p className="text-center text-muted-foreground py-12">Sem dados</p>}
-          </CardContent>
-        </Card>
-
-        <Card className="border-0 shadow-sm">
-          <CardHeader><CardTitle className="text-base">Por Tipo de Serviço</CardTitle></CardHeader>
-          <CardContent>
-            {typeData.length > 0 ? (
-              <ResponsiveContainer width="100%" height={250}>
-                <PieChart>
-                  <Pie data={typeData} cx="50%" cy="50%" innerRadius={60} outerRadius={90} dataKey="value" label={({ name, value }) => `${name}: ${value}`}>
-                    {typeData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
-            ) : <p className="text-center text-muted-foreground py-12">Sem dados</p>}
-          </CardContent>
-        </Card>
-
-        <Card className="border-0 shadow-sm">
-          <CardHeader><CardTitle className="text-base">Desempenho por Técnico</CardTitle></CardHeader>
-          <CardContent>
-            {techData.length > 0 ? (
-              <ResponsiveContainer width="100%" height={250}>
-                <BarChart data={techData} layout="vertical">
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis type="number" />
-                  <YAxis dataKey="name" type="category" width={100} />
-                  <Tooltip />
-                  <Legend />
-                  <Bar dataKey="Total" fill="#94a3b8" radius={[0, 4, 4, 0]} />
-                  <Bar dataKey="Encerradas" fill="#10b981" radius={[0, 4, 4, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            ) : <p className="text-center text-muted-foreground py-12">Sem dados</p>}
-          </CardContent>
-        </Card>
       </div>
     </div>
   );
