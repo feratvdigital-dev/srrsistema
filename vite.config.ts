@@ -20,8 +20,16 @@ export default defineConfig(({ mode }) => ({
       registerType: "autoUpdate",
       includeAssets: ["favicon.png", "favicon.ico", "pwa-icon-192.png", "pwa-icon-512.png"],
       workbox: {
-        navigateFallbackDenylist: [/^\/~oauth/],
+        navigateFallback: "index.html",
+        navigateFallbackDenylist: [/^\/~oauth/, /^\/(api|rest|auth|storage)\//],
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
+        runtimeCaching: [
+          {
+            urlPattern: /^https:\/\/.*\.supabase\.co\/.*/i,
+            handler: "NetworkFirst",
+            options: { cacheName: "supabase-api", expiration: { maxEntries: 50, maxAgeSeconds: 60 * 5 } },
+          },
+        ],
       },
       manifest: {
         name: "SRR Sistema",
