@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { CheckCircle2, Send, Search, FileText, PlusCircle } from 'lucide-react';
+import { CheckCircle2, Send, Search, FileText, PlusCircle, ArrowLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import logo from '@/assets/logo.png';
 import logoItDigital from '@/assets/logo-itdigital.png';
@@ -118,13 +118,14 @@ const InvoiceRequest = () => {
     <div className="min-h-screen bg-background">
       <header className="app-header sticky top-0 z-50 shadow-lg">
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center gap-3">
-          <button onClick={() => setView('menu')} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-            <img src={logo} alt="SR Resolve" className="h-9 w-auto" />
-            <div>
-              <h1 className="font-bold text-sm">Solicitar Nota Fiscal</h1>
-              <p className="text-xs opacity-60">Preencha seus dados</p>
-            </div>
+          <button onClick={() => setView('menu')} className="flex items-center justify-center w-9 h-9 rounded-full hover:bg-white/10 transition-colors">
+            <ArrowLeft className="h-5 w-5" />
           </button>
+          <img src={logo} alt="SR Resolve" className="h-9 w-auto" />
+          <div>
+            <h1 className="font-bold text-sm">Solicitar Nota Fiscal</h1>
+            <p className="text-xs opacity-60">Preencha seus dados</p>
+          </div>
         </div>
       </header>
 
