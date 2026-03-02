@@ -8,6 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import logo from '@/assets/logo.png';
 import logoItDigital from '@/assets/logo-itdigital.png';
 import { supabase } from '@/integrations/supabase/client';
+import nfseLogo from '@/assets/nfse-logo.png';
 
 const InvoiceRequest = () => {
   const { toast } = useToast();
@@ -49,7 +50,7 @@ const InvoiceRequest = () => {
     return (
       <div className="min-h-screen flex flex-col" style={{ background: 'linear-gradient(135deg, hsl(215 40% 12%), hsl(215 40% 20%))' }}>
         <header className="px-6 pt-8 pb-4 flex justify-center">
-          <img src={logo} alt="SR Resolve" className="h-14 w-auto drop-shadow-lg" />
+          <img src={logo} alt="SR Resolve" className="h-20 w-auto drop-shadow-lg" />
         </header>
 
         <div className="flex-1 flex items-center justify-center px-4 pb-8">
@@ -75,6 +76,10 @@ const InvoiceRequest = () => {
                 Acompanhar Nota Fiscal
               </Button>
             </a>
+
+            <div className="flex justify-center pt-4">
+              <img src={nfseLogo} alt="NFS-e" className="h-16 w-auto opacity-80" />
+            </div>
           </div>
         </div>
 
