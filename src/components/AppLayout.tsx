@@ -1,6 +1,6 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { Navigate, Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { Bell, BookOpen, BarChart3, Users, Plus, ArrowLeft, LogOut, Inbox, MapPin, Menu, DollarSign } from 'lucide-react';
+import { Bell, BookOpen, BarChart3, Users, Plus, ArrowLeft, LogOut, Inbox, MapPin, Menu, DollarSign, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -20,6 +20,7 @@ const menuItems = [
   { to: '/technicians', label: 'Equipe Técnica', icon: Users },
   { to: '/expenses', label: 'Despesas', icon: DollarSign },
   { to: '/reports', label: 'Relatórios', icon: BookOpen },
+  { to: '/invoices', label: 'Notas Fiscais', icon: FileText },
   { to: '/map', label: 'Mapa de OS', icon: MapPin },
 ];
 

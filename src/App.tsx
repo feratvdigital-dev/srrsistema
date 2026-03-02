@@ -21,6 +21,9 @@ const ClientRequest = lazy(() => import("./pages/ClientRequest"));
 const TicketsGrid = lazy(() => import("./pages/TicketsGrid"));
 const OrdersMap = lazy(() => import("./pages/OrdersMap"));
 const TrackTicket = lazy(() => import("./pages/TrackTicket"));
+const InvoiceRequest = lazy(() => import("./pages/InvoiceRequest"));
+const InvoiceTrack = lazy(() => import("./pages/InvoiceTrack"));
+const Invoices = lazy(() => import("./pages/Invoices"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient({
@@ -52,6 +55,8 @@ const App = () => (
                   <Route path="/login" element={<Login />} />
                   <Route path="/request" element={<ClientRequest />} />
                   <Route path="/track" element={<TrackTicket />} />
+                  <Route path="/invoice-request" element={<InvoiceRequest />} />
+                  <Route path="/invoice-track" element={<InvoiceTrack />} />
                   <Route path="/" element={<Navigate to="/login" replace />} />
                   <Route element={<AppLayout />}>
                     <Route path="/dashboard" element={<Dashboard />} />
@@ -62,6 +67,7 @@ const App = () => (
                     <Route path="/reports" element={<Reports />} />
                     <Route path="/tickets" element={<TicketsGrid />} />
                     <Route path="/map" element={<OrdersMap />} />
+                    <Route path="/invoices" element={<Invoices />} />
                   </Route>
                   <Route path="*" element={<NotFound />} />
                 </Routes>
