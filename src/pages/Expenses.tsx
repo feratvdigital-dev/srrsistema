@@ -193,7 +193,7 @@ const Expenses = () => {
           <p className="text-xs text-white/70 font-medium">Chamados encerrados</p>
           <p className="text-[10px] text-white/50 mt-1">Total Ganhos</p>
         </div>
-        <div className={`relative overflow-hidden rounded-2xl p-5 ${profit >= 0 ? 'bg-gradient-to-br from-[hsl(152,60%,38%)] to-[hsl(152,50%,50%)]' : 'bg-gradient-to-br from-[hsl(0,70%,50%)] to-[hsl(0,60%,60%)]'}`}>
+        <div className={`relative overflow-hidden rounded-2xl p-5 ${profit >= 0 ? 'bg-gradient-to-br from-[hsl(210,80%,45%)] to-[hsl(220,70%,55%)]' : 'bg-gradient-to-br from-[hsl(0,70%,50%)] to-[hsl(0,60%,60%)]'}`}>
           <div className="absolute top-0 right-0 w-20 h-20 rounded-full bg-white/10 -translate-y-6 translate-x-6" />
           <Wallet className="h-5 w-5 text-white/70 mb-2" />
           <p className="text-2xl font-extrabold text-white">R$ {profit.toFixed(2).replace('.', ',')}</p>
