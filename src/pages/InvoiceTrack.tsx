@@ -50,16 +50,44 @@ const mapRow = (row: any): InvoiceRequest => ({
 const InvoiceTrack = () => {
   const [searchParams] = useSearchParams();
   const [searchValue, setSearchValue] = useState('');
-  const [request, setRequest] = useState<InvoiceRequest | null>(null);
+  const [requests, setRequests] = useState<InvoiceRequest[]>([]);
+  const [selectedRequest, setSelectedRequest] = useState<InvoiceRequest | null>(null);
   const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
+    const phone = searchParams.get('phone');
     const id = searchParams.get('id');
-    if (id) {
+    if (phone) {
+      setSearchValue(phone);
+      searchByPhone(phone);
+    } else if (id) {
       setSearchValue(id);
       searchById(id);
     }
   }, [searchParams]);
+
+  const normalizePhone = (phone: string) => phone.replace(/\D/g, '');
+
+  const searchByPhone = async (phone: string) => {
+    const normalized = normalizePhone(phone);
+    const { data } = await supabase
+      .from('invoice_requests')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (data) {
+      const found = data.filter((row: any) => normalizePhone(row.phone) === normalized).map(mapRow);
+      if (found.length > 0) {
+        setRequests(found);
+        setSelectedRequest(null);
+        setNotFound(false);
+      } else {
+        setRequests([]);
+        setSelectedRequest(null);
+        setNotFound(true);
+      }
+    }
+  };
 
   const searchById = async (id: string) => {
     const { data } = await supabase
@@ -69,10 +97,13 @@ const InvoiceTrack = () => {
       .maybeSingle();
 
     if (data) {
-      setRequest(mapRow(data));
+      const mapped = mapRow(data);
+      setRequests([mapped]);
+      setSelectedRequest(mapped);
       setNotFound(false);
     } else {
-      setRequest(null);
+      setRequests([]);
+      setSelectedRequest(null);
       setNotFound(true);
     }
   };
@@ -81,10 +112,17 @@ const InvoiceTrack = () => {
     e.preventDefault();
     const trimmed = searchValue.trim();
     if (!trimmed) return;
-    await searchById(trimmed);
+
+    if (trimmed.toUpperCase().startsWith('NF')) {
+      await searchById(trimmed);
+    } else {
+      await searchByPhone(trimmed);
+    }
   };
 
   const getStepIndex = (status: string) => STEPS.indexOf(status as any);
+
+  const requestToShow = selectedRequest;
 
   return (
     <div className="min-h-screen bg-background">
@@ -106,14 +144,14 @@ const InvoiceTrack = () => {
                 <FileText className="h-10 w-10 mx-auto text-primary opacity-60" />
                 <h2 className="text-lg font-bold">Consulte sua Nota Fiscal</h2>
                 <p className="text-sm text-muted-foreground">
-                  Digite o código da sua solicitação
+                  Digite seu WhatsApp ou o código da solicitação
                 </p>
               </div>
               <div className="flex gap-2">
                 <Input
                   value={searchValue}
                   onChange={e => setSearchValue(e.target.value)}
-                  placeholder="Ex: NF1234567890"
+                  placeholder="WhatsApp ou código (NF...)"
                   className="flex-1"
                 />
                 <Button type="submit" className="bg-primary gap-1">
@@ -128,62 +166,94 @@ const InvoiceTrack = () => {
           <Card className="border-0 shadow-sm mt-4">
             <CardContent className="p-6 text-center space-y-2">
               <AlertCircle className="h-10 w-10 mx-auto text-destructive opacity-60" />
-              <p className="font-semibold text-destructive">Solicitação não encontrada</p>
+              <p className="font-semibold text-destructive">Nenhuma solicitação encontrada</p>
               <p className="text-sm text-muted-foreground">
-                Verifique o código e tente novamente.
+                Verifique o número do WhatsApp ou código e tente novamente.
               </p>
             </CardContent>
           </Card>
         )}
 
-        {request && (
+        {/* List of requests */}
+        {requests.length > 0 && !selectedRequest && (
+          <div className="mt-4 space-y-3">
+            <p className="text-sm font-bold text-muted-foreground">{requests.length} solicitação(ões) encontrada(s)</p>
+            {requests.map(r => {
+              const st = STATUS_CONFIG[r.status] || STATUS_CONFIG.pending;
+              return (
+                <Card key={r.id} className="border-0 shadow-sm cursor-pointer hover:shadow-md transition-shadow" onClick={() => setSelectedRequest(r)}>
+                  <CardContent className="p-4 flex items-center justify-between">
+                    <div>
+                      <p className="font-bold text-sm">{r.id}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {new Date(r.createdAt).toLocaleDateString('pt-BR')} — {r.fullName}
+                      </p>
+                    </div>
+                    <Badge className={`${st.color} border-0`}>
+                      {st.label}
+                    </Badge>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Detail view */}
+        {requestToShow && (
           <div className="mt-6 space-y-4">
+            {requests.length > 1 && (
+              <Button variant="ghost" className="text-sm gap-1" onClick={() => setSelectedRequest(null)}>
+                ← Voltar à lista
+              </Button>
+            )}
+
             <Card className="border-0 shadow-sm">
               <CardContent className="p-6 space-y-4">
                 <div className="flex items-start justify-between">
                   <div>
                     <p className="text-xs text-muted-foreground">Solicitação</p>
-                    <p className="font-bold text-base">{request.id}</p>
+                    <p className="font-bold text-base">{requestToShow.id}</p>
                   </div>
-                  <Badge className={`${(STATUS_CONFIG[request.status] || STATUS_CONFIG.pending).color} border-0`}>
-                    {(STATUS_CONFIG[request.status] || STATUS_CONFIG.pending).label}
+                  <Badge className={`${(STATUS_CONFIG[requestToShow.status] || STATUS_CONFIG.pending).color} border-0`}>
+                    {(STATUS_CONFIG[requestToShow.status] || STATUS_CONFIG.pending).label}
                   </Badge>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3 text-sm">
                   <div className="col-span-2">
                     <p className="text-xs text-muted-foreground">Nome Completo</p>
-                    <p className="font-medium">{request.fullName}</p>
+                    <p className="font-medium">{requestToShow.fullName}</p>
                   </div>
                   <div>
                     <p className="text-xs text-muted-foreground">CPF</p>
-                    <p className="font-medium">{request.cpf}</p>
+                    <p className="font-medium">{requestToShow.cpf}</p>
                   </div>
                   <div>
                     <p className="text-xs text-muted-foreground">Telefone</p>
-                    <p className="font-medium">{request.phone}</p>
+                    <p className="font-medium">{requestToShow.phone}</p>
                   </div>
                   <div className="col-span-2">
                     <p className="text-xs text-muted-foreground">E-mail</p>
-                    <p className="font-medium">{request.email}</p>
+                    <p className="font-medium">{requestToShow.email}</p>
                   </div>
                   <div className="col-span-2">
                     <p className="text-xs text-muted-foreground">Endereço</p>
-                    <p className="font-medium">{request.address}</p>
+                    <p className="font-medium">{requestToShow.address}</p>
                   </div>
                   <div>
                     <p className="text-xs text-muted-foreground">CEP</p>
-                    <p className="font-medium">{request.cep}</p>
+                    <p className="font-medium">{requestToShow.cep}</p>
                   </div>
                   <div>
                     <p className="text-xs text-muted-foreground">Cidade</p>
-                    <p className="font-medium">{request.city}</p>
+                    <p className="font-medium">{requestToShow.city}</p>
                   </div>
                   <div className="col-span-2">
                     <p className="text-xs text-muted-foreground">Data da Solicitação</p>
                     <p className="font-medium">
-                      {new Date(request.createdAt).toLocaleDateString('pt-BR')} às{' '}
-                      {new Date(request.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                      {new Date(requestToShow.createdAt).toLocaleDateString('pt-BR')} às{' '}
+                      {new Date(requestToShow.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                     </p>
                   </div>
                 </div>
@@ -196,7 +266,7 @@ const InvoiceTrack = () => {
                 <p className="text-sm font-bold mb-4">Progresso</p>
                 <div className="space-y-0">
                   {STEPS.map((step, i) => {
-                    const current = getStepIndex(request.status);
+                    const current = getStepIndex(requestToShow.status);
                     const isActive = i <= current;
                     const isCurrent = i === current;
                     const config = STATUS_CONFIG[step];
@@ -223,7 +293,7 @@ const InvoiceTrack = () => {
             </Card>
 
             {/* Download NF */}
-            {request.status === 'completed' && request.invoiceFileUrl && (
+            {requestToShow.status === 'completed' && requestToShow.invoiceFileUrl && (
               <Card className="border-0 shadow-sm border-l-4 border-l-green-500">
                 <CardContent className="p-6 space-y-3">
                   <div className="flex items-center gap-2">
@@ -233,7 +303,7 @@ const InvoiceTrack = () => {
                   <p className="text-sm text-muted-foreground">
                     Sua nota fiscal foi emitida e está pronta para download.
                   </p>
-                  <a href={request.invoiceFileUrl} target="_blank" rel="noopener noreferrer">
+                  <a href={requestToShow.invoiceFileUrl} target="_blank" rel="noopener noreferrer">
                     <Button className="w-full gap-2 bg-green-600 hover:bg-green-700 text-white">
                       <Download className="h-4 w-4" /> Baixar Nota Fiscal
                     </Button>
