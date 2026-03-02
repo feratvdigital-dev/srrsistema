@@ -4,7 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Search, Clock, CheckCircle2, AlertCircle, FileText, Download } from 'lucide-react';
+import { Search, Clock, CheckCircle2, AlertCircle, FileText, Download, ArrowLeft } from 'lucide-react';
 import logo from '@/assets/logo.png';
 import logoItDigital from '@/assets/logo-itdigital.png';
 import { supabase } from '@/integrations/supabase/client';
@@ -74,6 +74,9 @@ const InvoiceTrack = () => {
     <div className="min-h-screen bg-background">
       <header className="app-header sticky top-0 z-50 shadow-lg">
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center gap-3">
+          <a href="/invoice-request" className="flex items-center justify-center w-9 h-9 rounded-full hover:bg-white/10 transition-colors">
+            <ArrowLeft className="h-5 w-5" />
+          </a>
           <img src={logo} alt="SR Resolve" className="h-9 w-auto" />
           <div>
             <h1 className="font-bold text-sm">Acompanhar Nota Fiscal</h1>
