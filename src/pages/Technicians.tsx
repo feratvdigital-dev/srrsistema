@@ -8,10 +8,16 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Plus, Phone, Mail, Wrench, Pencil, Trash2, Camera, FileText, Eye } from 'lucide-react';
+import { Plus, Phone, Mail, Wrench, Pencil, Trash2, Camera, FileText, Eye, Users, UserCheck, UserX } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { SPECIALTY_LABELS, TECH_STATUS_LABELS } from '@/types/technician';
 import { useToast } from '@/hooks/use-toast';
+
+const statGradients = [
+  'bg-gradient-to-br from-[hsl(215,40%,16%)] to-[hsl(215,35%,28%)]',
+  'bg-gradient-to-br from-[hsl(152,60%,38%)] to-[hsl(152,50%,50%)]',
+  'bg-gradient-to-br from-[hsl(40,95%,50%)] to-[hsl(30,90%,55%)]',
+];
 
 const Technicians = () => {
   const { technicians, addTechnician, updateTechnician, deleteTechnician } = useTechnicians();
@@ -29,7 +35,6 @@ const Technicians = () => {
   const [documentPhoto, setDocumentPhoto] = useState('');
   const [techUsername, setTechUsername] = useState('');
   const [techPassword, setTechPassword] = useState('');
-
   const [viewTech, setViewTech] = useState<string | null>(null);
 
   const profileRef = useRef<HTMLInputElement>(null);
@@ -66,21 +71,15 @@ const Technicians = () => {
     const t = technicians.find(x => x.id === id);
     if (!t) return;
     setEditId(id);
-    setName(t.name);
-    setPhone(t.phone);
-    setEmail(t.email);
-    setRg(t.rg || '');
-    setCpf(t.cpf || '');
-    setSpecialty(t.specialty);
-    setProfilePhoto(t.profilePhoto || '');
-    setDocumentPhoto(t.documentPhoto || '');
-    setTechUsername(t.username || '');
-    setTechPassword(t.password || '');
+    setName(t.name); setPhone(t.phone); setEmail(t.email);
+    setRg(t.rg || ''); setCpf(t.cpf || ''); setSpecialty(t.specialty);
+    setProfilePhoto(t.profilePhoto || ''); setDocumentPhoto(t.documentPhoto || '');
+    setTechUsername(t.username || ''); setTechPassword(t.password || '');
     setOpen(true);
   };
 
   const techStats = (techName: string) => {
-    const techOrders = orders.filter(o => 
+    const techOrders = orders.filter(o =>
       o.assignedTechnician?.split(',').map(n => n.trim()).includes(techName)
     );
     return {
@@ -92,6 +91,9 @@ const Technicians = () => {
 
   const getInitials = (n: string) => n.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
 
+  const availableCount = technicians.filter(t => t.status === 'available').length;
+  const busyCount = technicians.filter(t => t.status === 'busy').length;
+
   return (
     <div className="space-y-6">
       <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) resetForm(); }}>
@@ -100,7 +102,6 @@ const Technicians = () => {
             <DialogTitle>{editId ? 'Editar Técnico' : 'Novo Técnico'}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            {/* Profile Photo */}
             <div className="flex flex-col items-center gap-2">
               <Avatar className="h-20 w-20 cursor-pointer border-2 border-dashed border-border hover:border-primary transition-colors" onClick={() => profileRef.current?.click()}>
                 {profilePhoto ? (
@@ -114,28 +115,27 @@ const Technicians = () => {
               <span className="text-xs text-muted-foreground">Clique para adicionar foto</span>
               <input ref={profileRef} type="file" accept="image/*" className="hidden" onChange={handleFileUpload(setProfilePhoto)} />
             </div>
-
             <div className="space-y-2">
               <Label>Nome *</Label>
-              <Input value={name} onChange={e => setName(e.target.value)} />
+              <Input value={name} onChange={e => setName(e.target.value)} className="rounded-xl" />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
                 <Label>RG</Label>
-                <Input value={rg} onChange={e => setRg(e.target.value)} placeholder="00.000.000-0" />
+                <Input value={rg} onChange={e => setRg(e.target.value)} placeholder="00.000.000-0" className="rounded-xl" />
               </div>
               <div className="space-y-2">
                 <Label>CPF</Label>
-                <Input value={cpf} onChange={e => setCpf(e.target.value)} placeholder="000.000.000-00" />
+                <Input value={cpf} onChange={e => setCpf(e.target.value)} placeholder="000.000.000-00" className="rounded-xl" />
               </div>
             </div>
             <div className="space-y-2">
               <Label>Telefone</Label>
-              <Input value={phone} onChange={e => setPhone(e.target.value)} />
+              <Input value={phone} onChange={e => setPhone(e.target.value)} className="rounded-xl" />
             </div>
             <div className="space-y-2">
               <Label>Email</Label>
-              <Input type="email" value={email} onChange={e => setEmail(e.target.value)} />
+              <Input type="email" value={email} onChange={e => setEmail(e.target.value)} className="rounded-xl" />
             </div>
             <div className="space-y-2">
               <Label>Especialidade</Label>
@@ -148,14 +148,9 @@ const Technicians = () => {
                 </SelectContent>
               </Select>
             </div>
-
-            {/* Document Photo */}
             <div className="space-y-2">
               <Label>Documento com Foto</Label>
-              <div
-                onClick={() => docRef.current?.click()}
-                className="border-2 border-dashed border-border rounded-xl p-4 flex flex-col items-center gap-2 cursor-pointer hover:border-primary transition-colors"
-              >
+              <div onClick={() => docRef.current?.click()} className="border-2 border-dashed border-border rounded-xl p-4 flex flex-col items-center gap-2 cursor-pointer hover:border-primary transition-colors">
                 {documentPhoto ? (
                   <img src={documentPhoto} alt="Documento" className="max-h-32 rounded-lg object-contain" />
                 ) : (
@@ -167,39 +162,55 @@ const Technicians = () => {
               </div>
               <input ref={docRef} type="file" accept="image/*" className="hidden" onChange={handleFileUpload(setDocumentPhoto)} />
             </div>
-
-            {/* Access Credentials */}
             <div className="space-y-2 border-t pt-4">
               <Label className="font-semibold">Acesso ao Sistema</Label>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2">
                   <Label>Usuário</Label>
-                  <Input value={techUsername} onChange={e => setTechUsername(e.target.value)} placeholder="Login do técnico" />
+                  <Input value={techUsername} onChange={e => setTechUsername(e.target.value)} placeholder="Login do técnico" className="rounded-xl" />
                 </div>
                 <div className="space-y-2">
                   <Label>Senha</Label>
-                  <Input type="password" value={techPassword} onChange={e => setTechPassword(e.target.value)} placeholder="Senha" />
+                  <Input type="password" value={techPassword} onChange={e => setTechPassword(e.target.value)} placeholder="Senha" className="rounded-xl" />
                 </div>
               </div>
             </div>
-
-            <Button onClick={handleSubmit} className="w-full">{editId ? 'Salvar' : 'Adicionar'}</Button>
+            <Button onClick={handleSubmit} className="w-full rounded-xl">{editId ? 'Salvar' : 'Adicionar'}</Button>
           </div>
         </DialogContent>
       </Dialog>
 
+      {/* Hero Stats */}
+      <div className="grid grid-cols-3 gap-3">
+        {[
+          { label: 'Total', value: technicians.length, icon: Users, gradient: statGradients[0] },
+          { label: 'Disponíveis', value: availableCount, icon: UserCheck, gradient: statGradients[1] },
+          { label: 'Ocupados', value: busyCount, icon: UserX, gradient: statGradients[2] },
+        ].map(({ label, value, icon: Icon, gradient }) => (
+          <div key={label} className={`relative overflow-hidden rounded-2xl p-4 ${gradient}`}>
+            <div className="absolute top-0 right-0 w-16 h-16 rounded-full bg-white/10 -translate-y-4 translate-x-4" />
+            <Icon className="h-5 w-5 text-white/70 mb-2" />
+            <p className="text-3xl font-extrabold text-white tracking-tight">{value}</p>
+            <p className="text-xs text-white/70 font-medium">{label}</p>
+          </div>
+        ))}
+      </div>
+
       {technicians.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
-          <Wrench className="h-12 w-12 mb-4 opacity-40" />
-          <p className="text-lg mb-4">Nenhum técnico cadastrado</p>
-          <Button onClick={() => setOpen(true)} className="bg-secondary hover:bg-secondary/90 text-secondary-foreground gap-2">
+          <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center mb-4">
+            <Wrench className="h-10 w-10 opacity-40" />
+          </div>
+          <p className="text-lg font-semibold mb-1">Nenhum técnico cadastrado</p>
+          <p className="text-sm mb-4">Adicione técnicos para começar</p>
+          <Button onClick={() => setOpen(true)} className="bg-secondary hover:bg-secondary/90 text-secondary-foreground gap-2 rounded-xl">
             <Plus className="h-4 w-4" /> Novo Técnico
           </Button>
         </div>
       ) : (
         <>
           <div className="flex justify-end">
-            <Button onClick={() => setOpen(true)} className="bg-secondary hover:bg-secondary/90 text-secondary-foreground gap-2">
+            <Button onClick={() => setOpen(true)} className="bg-secondary hover:bg-secondary/90 text-secondary-foreground gap-2 rounded-xl shadow-md hover:shadow-lg transition-all">
               <Plus className="h-4 w-4" /> Novo Técnico
             </Button>
           </div>
@@ -207,59 +218,57 @@ const Technicians = () => {
             {technicians.map(tech => {
               const s = techStats(tech.name);
               return (
-                <Card key={tech.id} className="border-0 shadow-sm">
-                  <CardContent className="p-5 space-y-3">
+                <Card key={tech.id} className="group border-0 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden">
+                  <div className={`h-1 ${tech.status === 'available' ? 'bg-green-500' : tech.status === 'busy' ? 'bg-yellow-500' : 'bg-muted-foreground/30'}`} />
+                  <CardContent className="p-5 space-y-4">
                     <div className="flex items-start justify-between">
                       <div className="flex items-center gap-3">
-                        <Avatar className="h-12 w-12">
+                        <Avatar className="h-14 w-14 ring-2 ring-border group-hover:ring-primary/30 transition-all">
                           {tech.profilePhoto ? (
                             <AvatarImage src={tech.profilePhoto} alt={tech.name} />
                           ) : (
-                            <AvatarFallback className="bg-purple-100 text-purple-600 font-bold">
+                            <AvatarFallback className="bg-gradient-to-br from-[hsl(270,60%,50%)] to-[hsl(280,65%,60%)] text-white font-bold text-lg">
                               {getInitials(tech.name)}
                             </AvatarFallback>
                           )}
                         </Avatar>
                         <div>
-                          <p className="font-bold">{tech.name}</p>
+                          <p className="font-bold text-foreground">{tech.name}</p>
                           <p className="text-sm text-muted-foreground">{SPECIALTY_LABELS[tech.specialty]}</p>
                         </div>
                       </div>
-                      <Badge className="bg-green-100 text-green-700 border-0">
+                      <Badge className={`${tech.status === 'available' ? 'bg-green-100 text-green-700' : tech.status === 'busy' ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-500'} border-0`}>
                         {TECH_STATUS_LABELS[tech.status]}
                       </Badge>
                     </div>
-                    <div className="text-sm text-muted-foreground space-y-1">
-                      <div className="flex items-center gap-2"><Phone className="h-3 w-3" /> {tech.phone || '-'}</div>
-                      <div className="flex items-center gap-2"><Mail className="h-3 w-3" /> {tech.email || '-'}</div>
-                      {tech.cpf && <div className="flex items-center gap-2"><FileText className="h-3 w-3" /> CPF: {tech.cpf}</div>}
-                      {tech.rg && <div className="flex items-center gap-2"><FileText className="h-3 w-3" /> RG: {tech.rg}</div>}
+                    <div className="text-sm text-muted-foreground space-y-1.5">
+                      <div className="flex items-center gap-2"><Phone className="h-3.5 w-3.5" /> {tech.phone || '-'}</div>
+                      <div className="flex items-center gap-2"><Mail className="h-3.5 w-3.5" /> {tech.email || '-'}</div>
                     </div>
                     <div className="grid grid-cols-3 gap-2">
-                      <div className="text-center p-2 rounded-lg bg-muted">
-                        <p className="font-bold text-foreground">{s.total}</p>
-                        <p className="text-xs text-muted-foreground">Total</p>
+                      <div className="text-center p-2.5 rounded-xl bg-muted">
+                        <p className="font-bold text-foreground text-lg">{s.total}</p>
+                        <p className="text-[10px] text-muted-foreground font-medium">Total</p>
                       </div>
-                      <div className="text-center p-2 rounded-lg bg-orange-50">
-                        <p className="font-bold text-orange-600">{s.open}</p>
-                        <p className="text-xs text-muted-foreground">Em aberto</p>
+                      <div className="text-center p-2.5 rounded-xl bg-orange-50">
+                        <p className="font-bold text-orange-600 text-lg">{s.open}</p>
+                        <p className="text-[10px] text-muted-foreground font-medium">Em aberto</p>
                       </div>
-                      <div className="text-center p-2 rounded-lg bg-green-50">
-                        <p className="font-bold text-green-600">{s.closed}</p>
-                        <p className="text-xs text-muted-foreground">Encerradas</p>
+                      <div className="text-center p-2.5 rounded-xl bg-green-50">
+                        <p className="font-bold text-green-600 text-lg">{s.closed}</p>
+                        <p className="text-[10px] text-muted-foreground font-medium">Encerradas</p>
                       </div>
                     </div>
                     <div className="flex gap-2">
-                      <Button variant="outline" className="flex-1 gap-1" size="sm" onClick={() => setViewTech(tech.id)}>
+                      <Button variant="outline" className="flex-1 gap-1 rounded-xl" size="sm" onClick={() => setViewTech(tech.id)}>
                         <Eye className="h-3 w-3" /> Ver
                       </Button>
-                      <Button variant="outline" className="flex-1 gap-1" size="sm" onClick={() => handleEdit(tech.id)}>
+                      <Button variant="outline" className="flex-1 gap-1 rounded-xl" size="sm" onClick={() => handleEdit(tech.id)}>
                         <Pencil className="h-3 w-3" /> Editar
                       </Button>
                       <Button
-                        variant="outline"
-                        size="sm"
-                        className="text-destructive hover:text-destructive"
+                        variant="outline" size="sm"
+                        className="text-destructive hover:text-destructive rounded-xl"
                         onClick={() => { deleteTechnician(tech.id); toast({ title: 'Técnico removido' }); }}
                       >
                         <Trash2 className="h-4 w-4" />
@@ -286,21 +295,20 @@ const Technicians = () => {
               </DialogHeader>
               <div className="space-y-4">
                 <div className="flex flex-col items-center gap-2">
-                  <Avatar className="h-24 w-24">
+                  <Avatar className="h-24 w-24 ring-4 ring-primary/20">
                     {tech.profilePhoto ? (
                       <AvatarImage src={tech.profilePhoto} alt={tech.name} />
                     ) : (
-                      <AvatarFallback className="bg-primary/10 text-primary text-xl font-bold">
+                      <AvatarFallback className="bg-gradient-to-br from-[hsl(270,60%,50%)] to-[hsl(280,65%,60%)] text-white text-xl font-bold">
                         {getInitials(tech.name)}
                       </AvatarFallback>
                     )}
                   </Avatar>
                   <p className="text-lg font-bold">{tech.name}</p>
-                  <Badge className="bg-green-100 text-green-700 border-0">
+                  <Badge className={`${tech.status === 'available' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'} border-0`}>
                     {TECH_STATUS_LABELS[tech.status]}
                   </Badge>
                 </div>
-
                 <div className="space-y-2 text-sm">
                   <div className="flex items-center gap-2"><Wrench className="h-4 w-4 text-muted-foreground" /> {SPECIALTY_LABELS[tech.specialty]}</div>
                   <div className="flex items-center gap-2"><Phone className="h-4 w-4 text-muted-foreground" /> {tech.phone || '-'}</div>
@@ -308,31 +316,24 @@ const Technicians = () => {
                   {tech.cpf && <div className="flex items-center gap-2"><FileText className="h-4 w-4 text-muted-foreground" /> CPF: {tech.cpf}</div>}
                   {tech.rg && <div className="flex items-center gap-2"><FileText className="h-4 w-4 text-muted-foreground" /> RG: {tech.rg}</div>}
                 </div>
-
                 <div className="grid grid-cols-3 gap-2">
-                  <div className="text-center p-3 rounded-lg bg-muted">
+                  <div className="text-center p-3 rounded-xl bg-muted">
                     <p className="font-bold text-foreground text-lg">{s.total}</p>
                     <p className="text-xs text-muted-foreground">Total</p>
                   </div>
-                  <div className="text-center p-3 rounded-lg bg-orange-50">
+                  <div className="text-center p-3 rounded-xl bg-orange-50">
                     <p className="font-bold text-orange-600 text-lg">{s.open}</p>
                     <p className="text-xs text-muted-foreground">Em aberto</p>
                   </div>
-                  <div className="text-center p-3 rounded-lg bg-green-50">
+                  <div className="text-center p-3 rounded-xl bg-green-50">
                     <p className="font-bold text-green-600 text-lg">{s.closed}</p>
                     <p className="text-xs text-muted-foreground">Encerradas</p>
                   </div>
                 </div>
-
                 {tech.documentPhoto && (
                   <div className="space-y-2">
                     <Label className="font-semibold">Documento com Foto</Label>
-                    <img
-                      src={tech.documentPhoto}
-                      alt="Documento"
-                      className="w-full rounded-lg border object-contain max-h-80 cursor-pointer hover:opacity-90 transition-opacity"
-                      onClick={() => window.open(tech.documentPhoto, '_blank')}
-                    />
+                    <img src={tech.documentPhoto} alt="Documento" className="w-full rounded-xl border object-contain max-h-80 cursor-pointer hover:opacity-90 transition-opacity" onClick={() => window.open(tech.documentPhoto, '_blank')} />
                   </div>
                 )}
               </div>
@@ -345,6 +346,3 @@ const Technicians = () => {
 };
 
 export default Technicians;
-
-// View dialog is rendered inside the component above, adding it before the closing div
-

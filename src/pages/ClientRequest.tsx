@@ -4,44 +4,25 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Camera, CheckCircle2, Search, Send, Loader2 } from 'lucide-react';
+import { Camera, CheckCircle2, Search, Send, Loader2, ArrowRight } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import logo from '@/assets/logo.png';
 import { supabase } from '@/integrations/supabase/client';
 import { uploadPhotosFromFiles } from '@/utils/uploadPhoto';
 
 export interface ClientTicket {
-  id: string;
-  name: string;
-  whatsapp: string;
-  location: string;
-  latitude?: number;
-  longitude?: number;
-  description: string;
-  photos: string[];
-  status: 'pending' | 'accepted' | 'rejected' | 'in_progress' | 'completed';
-  createdAt: string;
-  linkedOrderId?: number;
+  id: string; name: string; whatsapp: string; location: string; latitude?: number; longitude?: number;
+  description: string; photos: string[]; status: 'pending' | 'accepted' | 'rejected' | 'in_progress' | 'completed';
+  createdAt: string; linkedOrderId?: number;
 }
 
 export const loadTickets = async (): Promise<ClientTicket[]> => {
-  const { data } = await supabase
-    .from('client_tickets')
-    .select('*')
-    .order('created_at', { ascending: false });
+  const { data } = await supabase.from('client_tickets').select('*').order('created_at', { ascending: false });
   if (!data) return [];
   return data.map((row: any) => ({
-    id: row.id,
-    name: row.name,
-    whatsapp: row.whatsapp,
-    location: row.location,
-    latitude: row.latitude,
-    longitude: row.longitude,
-    description: row.description,
-    photos: row.photos || [],
-    status: row.status,
-    createdAt: row.created_at,
-    linkedOrderId: row.linked_order_id,
+    id: row.id, name: row.name, whatsapp: row.whatsapp, location: row.location,
+    latitude: row.latitude, longitude: row.longitude, description: row.description,
+    photos: row.photos || [], status: row.status, createdAt: row.created_at, linkedOrderId: row.linked_order_id,
   }));
 };
 
@@ -58,81 +39,45 @@ const ClientRequest = () => {
 
   const handlePhotos = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
-    if (photos.length + files.length > 10) {
-      toast({ title: 'Máximo de 10 fotos permitido', variant: 'destructive' });
-      return;
-    }
+    if (photos.length + files.length > 10) { toast({ title: 'Máximo de 10 fotos permitido', variant: 'destructive' }); return; }
     setUploading(true);
-    try {
-      const urls = await uploadPhotosFromFiles(files, 'tickets');
-      setPhotos(prev => [...prev, ...urls]);
-    } catch (err: any) {
-      toast({ title: err?.message || 'Erro ao enviar fotos', variant: 'destructive' });
-    } finally {
-      setUploading(false);
-    }
+    try { const urls = await uploadPhotosFromFiles(files, 'tickets'); setPhotos(prev => [...prev, ...urls]); }
+    catch (err: any) { toast({ title: err?.message || 'Erro ao enviar fotos', variant: 'destructive' }); }
+    finally { setUploading(false); }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Input validation
-    const trimmedName = name.trim();
-    const trimmedWhatsapp = whatsapp.trim();
-    const trimmedLocation = location.trim();
-    const trimmedDescription = description.trim();
-    
-    if (!trimmedName || trimmedName.length > 200) {
-      toast({ title: 'Nome inválido (máx 200 caracteres)', variant: 'destructive' });
-      return;
-    }
-    if (!trimmedWhatsapp || trimmedWhatsapp.length > 20) {
-      toast({ title: 'WhatsApp inválido', variant: 'destructive' });
-      return;
-    }
-    if (!trimmedLocation || trimmedLocation.length > 500) {
-      toast({ title: 'Endereço inválido (máx 500 caracteres)', variant: 'destructive' });
-      return;
-    }
-    if (!trimmedDescription || trimmedDescription.length > 5000) {
-      toast({ title: 'Descrição inválida (máx 5000 caracteres)', variant: 'destructive' });
-      return;
-    }
-
+    const trimmedName = name.trim(); const trimmedWhatsapp = whatsapp.trim();
+    const trimmedLocation = location.trim(); const trimmedDescription = description.trim();
+    if (!trimmedName || trimmedName.length > 200) { toast({ title: 'Nome inválido (máx 200 caracteres)', variant: 'destructive' }); return; }
+    if (!trimmedWhatsapp || trimmedWhatsapp.length > 20) { toast({ title: 'WhatsApp inválido', variant: 'destructive' }); return; }
+    if (!trimmedLocation || trimmedLocation.length > 500) { toast({ title: 'Endereço inválido (máx 500 caracteres)', variant: 'destructive' }); return; }
+    if (!trimmedDescription || trimmedDescription.length > 5000) { toast({ title: 'Descrição inválida (máx 5000 caracteres)', variant: 'destructive' }); return; }
     const id = `T${Date.now()}`;
-    const { error } = await supabase
-      .from('client_tickets')
-      .insert({
-        id,
-        name: trimmedName,
-        whatsapp: trimmedWhatsapp,
-        location: trimmedLocation,
-        description: trimmedDescription,
-        photos,
-      });
-    if (error) {
-      toast({ title: 'Erro ao enviar chamado. Tente novamente.', variant: 'destructive' });
-      return;
-    }
-    setTicketId(id);
-    setSubmitted(true);
+    const { error } = await supabase.from('client_tickets').insert({ id, name: trimmedName, whatsapp: trimmedWhatsapp, location: trimmedLocation, description: trimmedDescription, photos });
+    if (error) { toast({ title: 'Erro ao enviar chamado. Tente novamente.', variant: 'destructive' }); return; }
+    setTicketId(id); setSubmitted(true);
     toast({ title: 'Chamado enviado com sucesso!' });
   };
 
   if (submitted) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <Card className="max-w-md w-full border-0 shadow-lg">
-          <CardContent className="p-8 text-center space-y-4">
-            <CheckCircle2 className="h-16 w-16 text-green-500 mx-auto" />
-            <h2 className="text-xl font-bold">Chamado Enviado!</h2>
-            <p className="text-muted-foreground">Seu chamado <strong>{ticketId}</strong> foi registrado. Você receberá uma mensagem no WhatsApp quando ele for aceito.</p>
+      <div className="min-h-screen flex items-center justify-center p-4" style={{ background: 'linear-gradient(135deg, hsl(215 40% 12%), hsl(215 40% 20%))' }}>
+        <Card className="max-w-md w-full border-0 shadow-2xl overflow-hidden">
+          <div className="h-2 bg-gradient-to-r from-green-500 to-green-400" />
+          <CardContent className="p-8 text-center space-y-5">
+            <div className="w-20 h-20 mx-auto rounded-full bg-green-100 flex items-center justify-center">
+              <CheckCircle2 className="h-10 w-10 text-green-500" />
+            </div>
+            <h2 className="text-xl font-extrabold">Chamado Enviado!</h2>
+            <p className="text-muted-foreground">Seu chamado <strong className="text-foreground">{ticketId}</strong> foi registrado. Você receberá uma mensagem no WhatsApp quando ele for aceito.</p>
             <a href={`/track?whatsapp=${encodeURIComponent(whatsapp)}`} className="block">
-              <Button className="w-full h-12 text-base font-semibold bg-green-600 hover:bg-green-700 text-white gap-2">
+              <Button className="w-full h-12 text-base font-bold bg-green-600 hover:bg-green-700 text-white gap-2 rounded-2xl shadow-lg">
                 <Search className="h-5 w-5" /> Acompanhe seu Chamado
               </Button>
             </a>
-            <Button onClick={() => { setSubmitted(false); setName(''); setWhatsapp(''); setLocation(''); setDescription(''); setPhotos([]); }} variant="outline" className="w-full">
+            <Button onClick={() => { setSubmitted(false); setName(''); setWhatsapp(''); setLocation(''); setDescription(''); setPhotos([]); }} variant="outline" className="w-full rounded-xl">
               Enviar Outro Chamado
             </Button>
           </CardContent>
@@ -144,48 +89,37 @@ const ClientRequest = () => {
   return (
     <div className="min-h-screen bg-background">
       <header className="app-header sticky top-0 z-50 shadow-lg">
-        <div className="max-w-7xl mx-auto px-4 h-14 flex items-center gap-3">
-          <img src={logo} alt="SR Resolve" className="h-8 w-auto" />
+        <div className="max-w-7xl mx-auto px-4 h-16 flex items-center gap-3">
+          <img src={logo} alt="SR Resolve" className="h-9 w-auto" />
           <div>
             <h1 className="font-bold text-sm">Abrir Chamado</h1>
-            <p className="text-xs opacity-70">Solicite um serviço</p>
+            <p className="text-xs opacity-60">Solicite um serviço</p>
           </div>
         </div>
       </header>
 
       <div className="max-w-lg mx-auto px-4 py-6">
         <form onSubmit={handleSubmit} className="space-y-4">
-          <Card className="border-0 shadow-sm">
+          <Card className="border-0 shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+            <div className="h-1 bg-gradient-to-r from-primary to-primary/50" />
             <CardHeader><CardTitle className="text-base">Seus Dados</CardTitle></CardHeader>
             <CardContent className="space-y-3">
-              <div className="space-y-1">
-                <Label>Nome Completo *</Label>
-                <Input value={name} onChange={e => setName(e.target.value)} required />
-              </div>
-              <div className="space-y-1">
-                <Label>WhatsApp *</Label>
-                <Input value={whatsapp} onChange={e => setWhatsapp(e.target.value)} placeholder="(11) 99999-9999" required />
-              </div>
-              <div className="space-y-1">
-                <Label>Local / Endereço *</Label>
-                <Input value={location} onChange={e => setLocation(e.target.value)} required />
-              </div>
+              <div className="space-y-1"><Label>Nome Completo *</Label><Input value={name} onChange={e => setName(e.target.value)} required className="rounded-xl" /></div>
+              <div className="space-y-1"><Label>WhatsApp *</Label><Input value={whatsapp} onChange={e => setWhatsapp(e.target.value)} placeholder="(11) 99999-9999" required className="rounded-xl" /></div>
+              <div className="space-y-1"><Label>Local / Endereço *</Label><Input value={location} onChange={e => setLocation(e.target.value)} required className="rounded-xl" /></div>
             </CardContent>
           </Card>
 
-
-          <Card className="border-0 shadow-sm">
+          <Card className="border-0 shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+            <div className="h-1 bg-gradient-to-r from-secondary to-secondary/50" />
             <CardHeader><CardTitle className="text-base">Descreva o Problema</CardTitle></CardHeader>
             <CardContent className="space-y-3">
-              <Textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="Descreva o problema com o máximo de detalhes..." rows={4} required />
-              
+              <Textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="Descreva o problema com o máximo de detalhes..." rows={4} required className="rounded-xl" />
               <div>
                 <p className="text-sm font-medium mb-2">Fotos do Problema</p>
                 <div className="flex gap-3 flex-wrap">
-                  {photos.map((p, i) => (
-                    <img key={i} src={p} alt={`Foto ${i + 1}`} className="w-24 h-24 object-cover rounded-xl border" />
-                  ))}
-                  <label htmlFor="client-photos" className="w-24 h-24 border-2 border-dashed border-border rounded-xl flex flex-col items-center justify-center gap-1 text-muted-foreground hover:border-primary hover:text-primary transition-colors cursor-pointer">
+                  {photos.map((p, i) => <img key={i} src={p} alt={`Foto ${i + 1}`} className="w-24 h-24 object-cover rounded-2xl border shadow-sm" />)}
+                  <label htmlFor="client-photos" className="w-24 h-24 border-2 border-dashed border-border rounded-2xl flex flex-col items-center justify-center gap-1 text-muted-foreground hover:border-primary hover:text-primary transition-colors cursor-pointer">
                     {uploading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Camera className="h-5 w-5" />}
                     <span className="text-xs">{uploading ? 'Enviando...' : 'Adicionar'}</span>
                   </label>
@@ -195,7 +129,7 @@ const ClientRequest = () => {
             </CardContent>
           </Card>
 
-          <Button type="submit" className="w-full h-12 text-base font-semibold bg-green-600 hover:bg-green-700 text-white gap-2">
+          <Button type="submit" className="w-full h-14 text-base font-bold bg-green-600 hover:bg-green-700 text-white gap-2 rounded-2xl shadow-lg hover:shadow-xl transition-all">
             <Send className="h-5 w-5" /> Enviar Chamado
           </Button>
         </form>
