@@ -112,6 +112,62 @@ export type Database = {
         }
         Relationships: []
       }
+      invoice_requests: {
+        Row: {
+          address: string
+          cep: string
+          city: string
+          completed_at: string | null
+          cpf: string
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          invoice_file_url: string | null
+          order_id: number | null
+          phone: string
+          status: string
+        }
+        Insert: {
+          address?: string
+          cep?: string
+          city?: string
+          completed_at?: string | null
+          cpf: string
+          created_at?: string
+          email?: string
+          full_name: string
+          id: string
+          invoice_file_url?: string | null
+          order_id?: number | null
+          phone?: string
+          status?: string
+        }
+        Update: {
+          address?: string
+          cep?: string
+          city?: string
+          completed_at?: string | null
+          cpf?: string
+          created_at?: string
+          email?: string
+          full_name?: string
+          id?: string
+          invoice_file_url?: string | null
+          order_id?: number | null
+          phone?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoice_requests_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "service_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       service_orders: {
         Row: {
           address: string
