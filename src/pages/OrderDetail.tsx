@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useOrders } from '@/contexts/OrderContext';
+import { supabase } from '@/integrations/supabase/client';
 import { useTechnicians } from '@/contexts/TechnicianContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -67,6 +68,18 @@ const OrderDetail = () => {
   const [editingClosed, setEditingClosed] = useState(false);
   const [saving, setSaving] = useState(false);
   const [changingStatus, setChangingStatus] = useState(false);
+  const [realMaterialCost, setRealMaterialCost] = useState(0);
+
+  useEffect(() => {
+    if (!order) return;
+    const fetchLinkedExpenses = async () => {
+      const { data } = await supabase.from('expenses').select('amount').eq('order_id', order.id).eq('category', 'materials');
+      if (data) setRealMaterialCost(data.reduce((sum: number, e: any) => sum + Number(e.amount), 0));
+    };
+    fetchLinkedExpenses();
+    const channel = supabase.channel(`expenses_order_${order.id}`).on('postgres_changes', { event: '*', schema: 'public', table: 'expenses' }, () => fetchLinkedExpenses()).subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [order?.id]);
 
   if (!order) {
     return (
@@ -458,6 +471,27 @@ const OrderDetail = () => {
                 {order.materialDescription && (
                   <p className="text-muted-foreground text-xs px-1">{order.materialDescription}</p>
                 )}
+              </div>
+            )}
+            {realMaterialCost > 0 && (
+              <div className="space-y-2 p-4 rounded-xl bg-muted/30 border border-dashed border-muted-foreground/20">
+                <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-semibold">Análise de Material (interno)</p>
+                <div className="flex justify-between items-center">
+                  <span className="text-xs text-muted-foreground">Custo real do material</span>
+                  <span className="text-sm font-medium text-destructive">- R$ {realMaterialCost.toFixed(2).replace('.', ',')}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-xs text-muted-foreground">Material cobrado do cliente</span>
+                  <span className="text-sm font-medium">R$ {(isClosed ? order.materialCost : (parseFloat(materialCost) || 0)).toFixed(2).replace('.', ',')}</span>
+                </div>
+                <div className="border-t border-dashed pt-2 flex justify-between items-center">
+                  <span className="text-xs font-semibold text-muted-foreground">Lucro no material</span>
+                  {(() => {
+                    const chargedMat = isClosed ? order.materialCost : (parseFloat(materialCost) || 0);
+                    const profit = chargedMat - realMaterialCost;
+                    return <span className={`text-sm font-bold ${profit >= 0 ? 'text-green-600' : 'text-destructive'}`}>R$ {profit.toFixed(2).replace('.', ',')}</span>;
+                  })()}
+                </div>
               </div>
             )}
             <div className={`flex justify-between items-center p-5 rounded-2xl bg-gradient-to-r ${config.gradient} text-white font-bold shadow-lg ${config.glow}`}>
