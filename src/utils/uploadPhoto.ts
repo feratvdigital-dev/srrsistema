@@ -1,7 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
-const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'application/pdf'];
 
 export async function uploadPhoto(file: File, folder: string): Promise<string> {
   // Validate file size
@@ -11,11 +11,11 @@ export async function uploadPhoto(file: File, folder: string): Promise<string> {
 
   // Validate file type
   if (!ALLOWED_TYPES.includes(file.type)) {
-    throw new Error('Tipo de arquivo não permitido. Use JPEG, PNG, WebP ou GIF.');
+    throw new Error('Tipo de arquivo não permitido. Use JPEG, PNG, WebP, GIF ou PDF.');
   }
 
   const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
-  const safeExt = ['jpg', 'jpeg', 'png', 'webp', 'gif'].includes(ext) ? ext : 'jpg';
+  const safeExt = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'pdf'].includes(ext) ? ext : 'jpg';
   const fileName = `${folder}/${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${safeExt}`;
 
   const { error } = await supabase.storage
