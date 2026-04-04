@@ -27,7 +27,7 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 relative overflow-hidden" style={{ background: 'linear-gradient(135deg, hsl(215 40% 12%), hsl(215 40% 20%), hsl(207 60% 25%))' }}>
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 relative overflow-hidden" style={{ background: 'linear-gradient(135deg, hsl(0 60% 15%), hsl(0 55% 22%), hsl(5 50% 28%))' }}>
       {/* Decorative elements */}
       <div className="absolute top-0 left-0 w-96 h-96 rounded-full bg-white/[0.02] -translate-y-48 -translate-x-48" />
       <div className="absolute bottom-0 right-0 w-80 h-80 rounded-full bg-white/[0.03] translate-y-40 translate-x-40" />
