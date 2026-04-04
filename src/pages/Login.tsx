@@ -27,14 +27,14 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 relative overflow-hidden" style={{ background: 'linear-gradient(135deg, hsl(215 40% 12%), hsl(215 40% 20%), hsl(207 60% 25%))' }}>
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 relative overflow-hidden" style={{ background: 'linear-gradient(135deg, hsl(0 60% 15%), hsl(0 55% 22%), hsl(5 50% 28%))' }}>
       {/* Decorative elements */}
       <div className="absolute top-0 left-0 w-96 h-96 rounded-full bg-white/[0.02] -translate-y-48 -translate-x-48" />
       <div className="absolute bottom-0 right-0 w-80 h-80 rounded-full bg-white/[0.03] translate-y-40 translate-x-40" />
       <div className="absolute top-1/4 right-1/4 w-40 h-40 rounded-full bg-primary/5" />
 
       <Card className="w-full max-w-sm sm:max-w-md shadow-2xl border-0 overflow-hidden relative z-10 backdrop-blur-sm">
-        <div className="p-6 sm:p-8 flex flex-col items-center relative overflow-hidden" style={{ background: 'linear-gradient(135deg, hsl(215 40% 14%), hsl(215 40% 22%))' }}>
+        <div className="p-6 sm:p-8 flex flex-col items-center relative overflow-hidden" style={{ background: 'linear-gradient(135deg, hsl(0 60% 18%), hsl(0 55% 25%))' }}>
           <div className="absolute top-0 right-0 w-32 h-32 rounded-full bg-white/5 -translate-y-10 translate-x-10" />
           <div className="absolute bottom-0 left-0 w-20 h-20 rounded-full bg-white/5 translate-y-6 -translate-x-6" />
           <img src={logo} alt="SR Resolve" className="h-24 sm:h-32 w-auto mb-4 sm:mb-5 drop-shadow-lg relative z-10" />
