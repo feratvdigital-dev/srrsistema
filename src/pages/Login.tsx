@@ -34,7 +34,7 @@ const Login = () => {
       <div className="absolute top-1/4 right-1/4 w-40 h-40 rounded-full bg-primary/5" />
 
       <Card className="w-full max-w-sm sm:max-w-md shadow-2xl border-0 overflow-hidden relative z-10 backdrop-blur-sm">
-        <div className="p-6 sm:p-8 flex flex-col items-center relative overflow-hidden" style={{ background: 'linear-gradient(135deg, hsl(215 40% 14%), hsl(215 40% 22%))' }}>
+        <div className="p-6 sm:p-8 flex flex-col items-center relative overflow-hidden" style={{ background: 'linear-gradient(135deg, hsl(0 60% 18%), hsl(0 55% 25%))' }}>
           <div className="absolute top-0 right-0 w-32 h-32 rounded-full bg-white/5 -translate-y-10 translate-x-10" />
           <div className="absolute bottom-0 left-0 w-20 h-20 rounded-full bg-white/5 translate-y-6 -translate-x-6" />
           <img src={logo} alt="SR Resolve" className="h-24 sm:h-32 w-auto mb-4 sm:mb-5 drop-shadow-lg relative z-10" />
